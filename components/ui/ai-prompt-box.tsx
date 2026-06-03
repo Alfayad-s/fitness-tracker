@@ -9,6 +9,7 @@ import {
   FileText,
   FolderCode,
   Globe,
+  Loader2,
   Mic,
   Paperclip,
   Square,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
+import { useVoiceInput } from "@/hooks/use-voice-input";
 import { cn } from "@/lib/utils";
 
 export type PromptBoxTheme = "dark" | "light";
@@ -234,15 +236,11 @@ Button.displayName = "Button";
 
 interface VoiceRecorderProps {
   isRecording: boolean;
-  onStartRecording: () => void;
-  onStopRecording: (duration: number) => void;
   visualizerBars?: number;
 }
 
 const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   isRecording,
-  onStartRecording,
-  onStopRecording,
   visualizerBars = 32,
 }) => {
   const theme = usePromptBoxTheme();
@@ -250,21 +248,24 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   React.useEffect(() => {
-    if (isRecording) {
-      onStartRecording();
-      timerRef.current = setInterval(() => setTime((t) => t + 1), 1000);
-    } else {
+    if (!isRecording) {
+      setTime(0);
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      onStopRecording(time);
-      setTime(0);
+      return;
     }
+
+    setTime(0);
+    timerRef.current = setInterval(() => setTime((t) => t + 1), 1000);
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [isRecording, time, onStartRecording, onStopRecording]);
+  }, [isRecording]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -599,12 +600,23 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
     const [files, setFiles] = React.useState<File[]>([]);
     const [filePreviews, setFilePreviews] = React.useState<Record<string, string>>({});
     const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
-    const [isRecording, setIsRecording] = React.useState(false);
     const [showSearch, setShowSearch] = React.useState(false);
     const [showThink, setShowThink] = React.useState(false);
     const [showCanvas, setShowCanvas] = React.useState(false);
     const uploadInputRef = React.useRef<HTMLInputElement>(null);
     const promptBoxRef = React.useRef<HTMLDivElement>(null);
+
+    const voice = useVoiceInput({
+      onInterimTranscript: (text) => setInput(text),
+    });
+    const {
+      isRecording,
+      isProcessing,
+      isSupported: isVoiceSupported,
+      error: voiceError,
+      start: startVoice,
+      stop: stopVoice,
+    } = voice;
 
     const isImageFile = (file: File) => file.type.startsWith("image/");
     const isPdfFile = (file: File) => file.type === "application/pdf";
@@ -675,28 +687,63 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
       return () => document.removeEventListener("paste", handlePaste);
     }, [handlePaste]);
 
-    const handleSubmit = () => {
-      if (input.trim() || files.length > 0) {
+    const formatOutgoingMessage = React.useCallback(
+      (text: string) => {
         let messagePrefix = "";
         if (showSearch) messagePrefix = "[Search: ";
         else if (showThink) messagePrefix = "[Think: ";
         else if (showCanvas) messagePrefix = "[Canvas: ";
-        const formattedInput = messagePrefix ? `${messagePrefix}${input}]` : input;
-        onSend(formattedInput, files);
+        return messagePrefix ? `${messagePrefix}${text}]` : text;
+      },
+      [showCanvas, showSearch, showThink],
+    );
+
+    const handleSubmit = () => {
+      if (isProcessing || isRecording) return;
+      if (input.trim() || files.length > 0) {
+        onSend(formatOutgoingMessage(input), files);
         setInput("");
         setFiles([]);
         setFilePreviews({});
       }
     };
 
-    const handleStartRecording = () => undefined;
-
-    const handleStopRecording = (duration: number) => {
-      setIsRecording(false);
-      onSend(`[Voice message - ${duration} seconds]`, []);
-    };
-
     const hasContent = input.trim() !== "" || files.length > 0;
+    const inputBusy = isLoading || isRecording || isProcessing;
+
+    const sendVoiceTranscript = React.useCallback(async () => {
+      const text = await stopVoice();
+      setInput("");
+      if (text?.trim()) {
+        onSend(formatOutgoingMessage(text), []);
+      }
+    }, [formatOutgoingMessage, onSend, stopVoice]);
+
+    const handlePrimaryAction = React.useCallback(async () => {
+      if (isLoading) return;
+      if (isRecording) {
+        await sendVoiceTranscript();
+        return;
+      }
+      if (hasContent) {
+        handleSubmit();
+        return;
+      }
+      if (!isVoiceSupported) {
+        voice.setError("Voice input is not supported in this browser.");
+        return;
+      }
+      await startVoice();
+    }, [
+      hasContent,
+      handleSubmit,
+      isLoading,
+      isRecording,
+      isVoiceSupported,
+      sendVoiceTranscript,
+      startVoice,
+      voice,
+    ]);
 
     const toggleSearch = () => {
       setShowSearch((prev) => !prev);
@@ -713,7 +760,7 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
         <PromptInput
           value={input}
           onValueChange={setInput}
-          isLoading={isLoading}
+          isLoading={isLoading || isProcessing}
           onSubmit={handleSubmit}
           className={cn(
             "w-full transition-all duration-300 ease-in-out",
@@ -721,7 +768,7 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
             isRecording && "border-red-500/70",
             className,
           )}
-          disabled={isLoading || isRecording}
+          disabled={inputBusy}
           ref={ref ?? promptBoxRef}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -793,13 +840,7 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
             />
           </div>
 
-          {isRecording && (
-            <VoiceRecorder
-              isRecording={isRecording}
-              onStartRecording={handleStartRecording}
-              onStopRecording={handleStopRecording}
-            />
-          )}
+          {isRecording && <VoiceRecorder isRecording={isRecording} />}
 
           <PromptInputActions className="flex items-center justify-between gap-2 p-0 pt-2">
             <div
@@ -881,11 +922,15 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
               tooltip={
                 isLoading
                   ? "Stop generation"
-                  : isRecording
-                    ? "Stop recording"
-                    : hasContent
-                      ? "Send message"
-                      : "Voice message"
+                  : isProcessing
+                    ? "Transcribing…"
+                    : isRecording
+                      ? "Stop and send"
+                      : hasContent
+                        ? "Send message"
+                        : isVoiceSupported
+                          ? "Voice message"
+                          : "Voice not supported"
               }
             >
               <Button
@@ -902,14 +947,17 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
                       ? themeStyles.sendBtnFilled
                       : themeStyles.sendBtnEmpty,
                 )}
-                onClick={() => {
-                  if (isRecording) setIsRecording(false);
-                  else if (hasContent) handleSubmit();
-                  else setIsRecording(true);
-                }}
-                disabled={isLoading && !hasContent}
+                onClick={() => void handlePrimaryAction()}
+                disabled={isProcessing || (isLoading && !hasContent && !isRecording)}
               >
-                {isLoading ? (
+                {isProcessing ? (
+                  <Loader2
+                    className={cn(
+                      "h-4 w-4 animate-spin",
+                      themeStyles.sendIconOnFilled,
+                    )}
+                  />
+                ) : isLoading ? (
                   <Square
                     className={cn(
                       "h-4 w-4 animate-pulse",
@@ -934,6 +982,12 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
             </PromptInputAction>
           </PromptInputActions>
         </PromptInput>
+
+        {voiceError ? (
+          <p className="mt-2 px-1 text-xs text-red-400" role="alert">
+            {voiceError}
+          </p>
+        ) : null}
 
         <ImageViewDialog
           imageUrl={selectedImage}

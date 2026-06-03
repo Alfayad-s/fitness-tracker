@@ -399,7 +399,7 @@ function AiAssistantViewInner({
           <PromptInputBox
             theme="light"
             isLoading={isLoading}
-            placeholder="Ask anything, log a meal, or attach food / BMA photos…"
+            placeholder="Ask anything, tap the mic to talk, or attach food / BMA photos…"
             onSend={handleSend}
           />
         </div>
