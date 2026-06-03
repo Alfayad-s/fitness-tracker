@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/modern-mobile-menu.css";
+@import "../styles/ai-prompt-box.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -54,7 +56,15 @@ body {
   overscroll-behavior-y: none;
 }
 
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+/* shadcn/ui design tokens — light (:root) and dark (.dark) */
 :root {
+  --keyboard-inset: 0px;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -132,5 +142,11 @@ body {
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer components {
+  .cn-toast {
+    @apply rounded-lg border border-border bg-popover text-popover-foreground shadow-lg;
   }
 }

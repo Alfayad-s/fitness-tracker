@@ -1,0 +1,52 @@
+/* AI prompt box — scrollbar and focus styles */
+.ai-prompt-box *:focus-visible {
+  outline-offset: 0 !important;
+  --ring-offset: 0 !important;
+}
+
+.ai-prompt-box textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-prompt-box textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ai-prompt-box textarea::-webkit-scrollbar-thumb {
+  background-color: #444444;
+  border-radius: 3px;
+}
+
+.ai-prompt-box textarea::-webkit-scrollbar-thumb:hover {
+  background-color: #555555;
+}
+
+/* AI assistant page — always light, even if app uses dark mode */
+.ai-assistant-light {
+  color-scheme: light;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
+
+.ai-assistant-light .ai-prompt-box textarea::-webkit-scrollbar-thumb {
+  background-color: #d4d4d4;
+}
+
+.ai-assistant-light .ai-prompt-box textarea::-webkit-scrollbar-thumb:hover {
+  background-color: #a3a3a3;
+}

@@ -1,0 +1,10 @@
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "body_water_kg" numeric(6, 2);
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "protein_kg" numeric(6, 2);
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "mineral_kg" numeric(6, 2);
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "muscle_mass_kg" numeric(6, 2);
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "bone_mass_kg" numeric(6, 2);
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "bmi" numeric(5, 2);
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "visceral_fat_level" smallint;
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "metabolic_age" numeric(5, 1);
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "skeletal_muscle_mass_kg" numeric(6, 2);
+ALTER TABLE "body_measurements" ADD COLUMN IF NOT EXISTS "body_water_percent" numeric(5, 2);

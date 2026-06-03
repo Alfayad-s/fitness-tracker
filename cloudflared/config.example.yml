@@ -1,0 +1,16 @@
+# Optional named tunnel (stable hostname). Not required for quick tunnels.
+# Docs: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/
+#
+# Setup (one-time):
+#   cloudflared tunnel create fitness-tracker-dev
+#   cloudflared tunnel route dns fitness-tracker-dev dev-fitness.yourdomain.com
+#
+# Copy this file to ~/.cloudflared/config.yml and fill in tunnel + credentials paths.
+
+# tunnel: <TUNNEL_UUID>
+# credentials-file: /Users/<you>/.cloudflared/<TUNNEL_UUID>.json
+
+ingress:
+  - hostname: dev-fitness.yourdomain.com
+    service: http://127.0.0.1:3000
+  - service: http_status:404

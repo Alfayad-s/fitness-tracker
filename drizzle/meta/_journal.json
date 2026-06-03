@@ -8,6 +8,34 @@
       "when": 1780418470655,
       "tag": "0000_silent_union_jack",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780418470656,
+      "tag": "0001_body_measurements_recorded_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780418470657,
+      "tag": "0002_indexes_audit_timestamps",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780418470658,
+      "tag": "0003_bma_body_composition_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780418470659,
+      "tag": "0004_nutrition_meals_water",
+      "breakpoints": true
     }
   ]
 }

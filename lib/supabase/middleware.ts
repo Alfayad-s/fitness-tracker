@@ -1,6 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import {
+  AUTH_ROUTES,
+  isAuthEntryPath,
+  isDeprecatedAuthPath,
+  isPublicPath,
+} from "@/lib/auth/routes";
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -29,8 +36,32 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Refresh the auth session — required so Server Components receive a valid session.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  if (isDeprecatedAuthPath(pathname)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = AUTH_ROUTES.login;
+    redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (!user && !isPublicPath(pathname)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = AUTH_ROUTES.login;
+    redirectUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (user && isAuthEntryPath(pathname)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = AUTH_ROUTES.defaultAuthenticated;
+    redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
+  }
 
   return supabaseResponse;
 }
