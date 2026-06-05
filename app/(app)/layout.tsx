@@ -1,21 +1,23 @@
+import { Suspense } from "react";
+
 import { AppHeader } from "@/components/layout/AppHeader";
+import { AppHeaderSkeleton } from "@/components/layout/app-header-skeleton";
 import { AppShell } from "@/components/layout/app-shell";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { WorkoutSyncProvider } from "@/components/workout/workout-sync-provider";
-import { getAppHeaderData } from "@/lib/layout/get-app-header-data";
 
-export default async function AppLayout({
+export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headerData = await getAppHeaderData();
-  const showHomeStreakPin = headerData.currentStreak >= 1;
-
   return (
     <AppShell
-      showHomeStreakPin={showHomeStreakPin}
-      header={<AppHeader data={headerData} />}
+      header={
+        <Suspense fallback={<AppHeaderSkeleton />}>
+          <AppHeader />
+        </Suspense>
+      }
     >
       <WorkoutSyncProvider />
       <InstallPrompt />

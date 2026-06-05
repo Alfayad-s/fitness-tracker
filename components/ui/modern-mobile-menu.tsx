@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 
 export type NavIconComponent = React.ComponentType<{
@@ -10,6 +11,7 @@ export type NavIconComponent = React.ComponentType<{
 export interface InteractiveMenuItem {
   label: string;
   icon: NavIconComponent;
+  href?: string;
 }
 
 export interface InteractiveMenuProps {
@@ -60,12 +62,13 @@ function InteractiveMenu({
     }
   }, [finalItems, activeIndex, isControlled]);
 
-  const handleItemClick = (index: number) => {
+  const handleItemClick = (index: number, item: InteractiveMenuItem) => {
     if (!finalItems) return;
+    if (item.href) return;
     if (!isControlled) {
       setUncontrolledIndex(index);
     }
-    onItemChange?.(index, finalItems[index]);
+    onItemChange?.(index, item);
   };
 
   const navStyle = useMemo(() => {
@@ -88,20 +91,42 @@ function InteractiveMenu({
         const isActive = index === activeIndex;
         const IconComponent = item.icon;
 
-        return (
-          <button
-            key={item.label}
-            type="button"
-            className={`menu__item ${isActive ? "active" : ""}`}
-            onClick={() => handleItemClick(index)}
-            aria-current={isActive ? "page" : undefined}
-          >
+        const itemClassName = `menu__item ${isActive ? "active" : ""}`;
+        const itemContent = (
+          <>
             <div className="menu__icon">
               <IconComponent className="icon" active={isActive} />
             </div>
             <strong className={`menu__text ${isActive ? "active" : ""}`}>
               {item.label}
             </strong>
+          </>
+        );
+
+        if (item.href) {
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              prefetch
+              className={itemClassName}
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => handleItemClick(index, item)}
+            >
+              {itemContent}
+            </Link>
+          );
+        }
+
+        return (
+          <button
+            key={item.label}
+            type="button"
+            className={itemClassName}
+            onClick={() => handleItemClick(index, item)}
+            aria-current={isActive ? "page" : undefined}
+          >
+            {itemContent}
           </button>
         );
       })}

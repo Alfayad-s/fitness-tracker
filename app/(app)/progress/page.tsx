@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { ProgressDashboard } from "@/components/analytics/progress-dashboard";
-import { createClient } from "@/lib/supabase/server";
+import { loadProgressInitialData } from "@/lib/analytics/load-progress-initial-data";
+import { requirePageUser } from "@/lib/auth/require-page-user";
 
 export const metadata: Metadata = {
   title: "Progress",
 };
 
 export default async function ProgressPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  await requirePageUser();
+  const initialData = await loadProgressInitialData();
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-6">
@@ -34,7 +28,7 @@ export default async function ProgressPage() {
         </Link>
       </header>
 
-      <ProgressDashboard />
+      <ProgressDashboard initialData={initialData ?? undefined} />
     </main>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
 import { NAV_MENU_ICONS } from "@/components/layout/nav-menu-icon";
@@ -15,11 +15,11 @@ import { NAV_ACCENT_COLOR } from "@/lib/navigation/nav-styles";
 const menuItems: InteractiveMenuItem[] = APP_NAV_ITEMS.map((item) => ({
   label: item.label,
   icon: NAV_MENU_ICONS[item.iconKey as AppNavIconKey],
+  href: item.href,
 }));
 
 export function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const activeIndex = useMemo(
     () => getActiveNavIndex(pathname, APP_NAV_ITEMS),
@@ -35,12 +35,6 @@ export function BottomNav() {
         items={menuItems}
         activeIndex={activeIndex}
         accentColor={NAV_ACCENT_COLOR}
-        onItemChange={(index) => {
-          const route = APP_NAV_ITEMS[index];
-          if (route && !pathname.startsWith(route.href)) {
-            router.push(route.href);
-          }
-        }}
       />
     </div>
   );

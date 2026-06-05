@@ -1,7 +1,9 @@
+import { cache } from "react";
+
 import { computeStreaks } from "@/lib/analytics/workout-stats";
-import { fetchAllWorkoutDates } from "@/lib/db/queries/analytics";
+import { fetchRecentWorkoutDatesForStreak } from "@/lib/db/queries/analytics";
 import { getUserProfile } from "@/lib/profile/get-user-profile";
-import { createClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/require-user";
 
 export type AppHeaderData = {
   avatarUrl: string | null;
@@ -10,26 +12,25 @@ export type AppHeaderData = {
   currentStreak: number;
 };
 
-export async function getAppHeaderData(): Promise<AppHeaderData> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const emptyHeaderData: AppHeaderData = {
+  avatarUrl: null,
+  displayName: null,
+  email: null,
+  currentStreak: 0,
+};
+
+export const getAppHeaderData = cache(async (): Promise<AppHeaderData> => {
+  const user = await getRequestUser();
 
   if (!user) {
-    return {
-      avatarUrl: null,
-      displayName: null,
-      email: null,
-      currentStreak: 0,
-    };
+    return emptyHeaderData;
   }
 
   const [profile, workoutDates] = await Promise.all([
     getUserProfile(user),
-    fetchAllWorkoutDates(user.id),
+    fetchRecentWorkoutDatesForStreak(user.id),
   ]);
-  const { current: currentStreak } = computeStreaks([...new Set(workoutDates)]);
+  const { current: currentStreak } = computeStreaks(workoutDates);
 
   return {
     avatarUrl: profile.avatarUrl,
@@ -37,4 +38,4 @@ export async function getAppHeaderData(): Promise<AppHeaderData> {
     email: profile.email,
     currentStreak,
   };
-}
+});

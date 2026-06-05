@@ -13,7 +13,7 @@ export async function DashboardFrequencySection({
   const weeklyFrequency = await loadDashboardWeeklyFrequency(userId);
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="rounded-xl bg-card p-4">
       <div className="mb-3 flex items-end justify-between gap-2">
         <div>
           <h2 className="text-base font-semibold">Workouts per week</h2>

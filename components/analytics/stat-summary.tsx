@@ -8,7 +8,7 @@ export function StatSummary({ items }: StatSummaryProps) {
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-xl border border-border bg-card px-3 py-3 shadow-sm"
+          className="rounded-xl bg-card px-3 py-3"
         >
           <p className="text-xs text-muted-foreground">{item.label}</p>
           <p className="mt-0.5 text-lg font-semibold tabular-nums">{item.value}</p>

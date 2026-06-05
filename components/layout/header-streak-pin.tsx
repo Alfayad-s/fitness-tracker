@@ -32,7 +32,7 @@ export function HeaderStreakPin({ currentStreak }: HeaderStreakPinProps) {
       className={cn(
         "fixed left-1/2 z-50 -translate-x-1/2 md:hidden",
         "inline-flex h-[var(--streak-capsule-height)] min-h-[var(--streak-capsule-height)] items-center rounded-full border border-border bg-card px-3.5 py-1.5 shadow-sm",
-        "transition-[top] duration-300 ease-out will-change-[top]",
+        "transition-[top] duration-150 ease-out",
         "hover:bg-muted/80",
       )}
       style={{

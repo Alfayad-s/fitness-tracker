@@ -9,6 +9,14 @@ import {
 } from "@/lib/auth/routes";
 
 export async function updateSession(request: NextRequest) {
+  const isPrefetch =
+    request.headers.get("Next-Router-Prefetch") === "1" ||
+    request.headers.get("Purpose") === "prefetch";
+
+  if (isPrefetch) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });

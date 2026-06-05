@@ -2,7 +2,7 @@
 
 import { Loader2, Plus } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BodyWeightChart } from "@/components/analytics/body-weight-chart";
 import { DateRangeFilter } from "@/components/analytics/date-range-filter";
@@ -37,20 +37,36 @@ import type {
   WorkoutAnalyticsSummary,
 } from "@/types/analytics";
 import type { BodyMeasurement } from "@/types";
+import type { ProgressInitialData } from "@/lib/analytics/load-progress-initial-data";
 
-export function ProgressDashboard() {
+type ProgressDashboardProps = {
+  initialData?: ProgressInitialData;
+};
+
+export function ProgressDashboard({ initialData }: ProgressDashboardProps) {
   const [preset, setPreset] = useState<DateRangePreset>("30d");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState(todayDateString());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
 
-  const [workout, setWorkout] = useState<WorkoutAnalyticsSummary | null>(null);
-  const [body, setBody] = useState<BodyAnalyticsSummary | null>(null);
-  const [exercises, setExercises] = useState<ExerciseOption[]>([]);
-  const [selectedExerciseId, setSelectedExerciseId] = useState("");
+  const [workout, setWorkout] = useState<WorkoutAnalyticsSummary | null>(
+    initialData?.workout ?? null,
+  );
+  const [body, setBody] = useState<BodyAnalyticsSummary | null>(
+    initialData?.body ?? null,
+  );
+  const [exercises, setExercises] = useState<ExerciseOption[]>(
+    initialData?.exercises ?? [],
+  );
+  const [selectedExerciseId, setSelectedExerciseId] = useState(
+    initialData?.exercises[0]?.id ?? "",
+  );
   const [exerciseProgress, setExerciseProgress] =
-    useState<ExerciseProgressSummary | null>(null);
-  const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
+    useState<ExerciseProgressSummary | null>(initialData?.exerciseProgress ?? null);
+  const [measurements, setMeasurements] = useState<BodyMeasurement[]>(
+    initialData?.measurements ?? [],
+  );
+  const skipInitialFetch = useRef(!!initialData);
 
   const customRange = { from: customFrom, to: customTo };
 
@@ -76,6 +92,10 @@ export function ProgressDashboard() {
   }, [preset, customFrom, customTo]);
 
   useEffect(() => {
+    if (skipInitialFetch.current) {
+      skipInitialFetch.current = false;
+      return;
+    }
     void load();
   }, [load]);
 

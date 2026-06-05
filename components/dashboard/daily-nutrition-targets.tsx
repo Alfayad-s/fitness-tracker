@@ -28,7 +28,7 @@ export async function DailyNutritionTargets({
 
   if (!targets) {
     return (
-      <section className="rounded-xl border border-dashed border-border bg-card p-4 shadow-sm">
+      <section className="rounded-xl bg-card p-4">
         <h2 className="text-sm font-semibold">Daily targets</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Log your weight (Progress or AI BMA scan) to see daily protein,
@@ -76,7 +76,7 @@ export async function DailyNutritionTargets({
   ] as const;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="rounded-xl bg-card p-4">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold">Daily targets</h2>

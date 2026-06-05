@@ -1,11 +1,11 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
 import { ExpandingAiDock } from "@/components/ui/expanding-ai-dock-shadcnui";
 import { ExpandingSearchDock } from "@/components/ui/expanding-search-dock-shadcnui";
 import { cn } from "@/lib/utils";
@@ -107,23 +107,20 @@ export function AppHeaderBar({
           )}
           aria-label="Open profile"
         >
-          {avatarUrl ? (
-            <Image
-              src={avatarUrl}
-              alt={displayName ?? "Profile"}
-              width={48}
-              height={48}
-              className="h-12 w-12 object-cover"
-              unoptimized
-            />
-          ) : (
-            <span
-              className="flex h-full w-full items-center justify-center bg-muted text-base font-semibold text-muted-foreground"
-              aria-hidden
-            >
-              {initials}
-            </span>
-          )}
+          <ProfileAvatarImage
+            src={avatarUrl}
+            alt={displayName ?? "Profile"}
+            size={48}
+            className="h-12 w-12 object-cover"
+            fallback={
+              <span
+                className="flex h-full w-full items-center justify-center bg-muted text-base font-semibold text-muted-foreground"
+                aria-hidden
+              >
+                {initials}
+              </span>
+            }
+          />
         </Link>
       </div>
     </header>

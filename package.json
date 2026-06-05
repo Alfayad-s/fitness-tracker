@@ -21,6 +21,7 @@
     "db:seed": "npx tsx drizzle/seed.ts"
   },
   "dependencies": {
+    "@darshanpatel2608/human-body-react": "^1.2.9",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@hookform/resolvers": "^5.4.0",
     "@radix-ui/react-dialog": "^1.1.15",

@@ -1,28 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { DbUnavailableAlert } from "@/components/db/db-unavailable-alert";
 import { ResumeSessionBanner } from "@/components/workout/resume-session-banner";
 import { WorkoutHistoryList } from "@/components/workout/workout-history-list";
 import { Button } from "@/components/ui/button";
+import { requirePageUser } from "@/lib/auth/require-page-user";
 import { listWorkoutsByUser } from "@/lib/db/queries/workouts";
-import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Workouts",
 };
 
 export default async function WorkoutsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
+  const user = await requirePageUser();
   const { workouts, dbUnavailable } = await listWorkoutsByUser(user.id);
 
   return (

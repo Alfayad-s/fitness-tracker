@@ -1,11 +1,11 @@
 "use client";
 
 import { Camera, Loader2 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AvatarPresetPicker } from "@/components/profile/avatar-preset-picker";
+import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
 import { Button } from "@/components/ui/button";
 import type { AvatarPresetCategory } from "@/lib/avatars/presets";
 import { cn } from "@/lib/utils";
@@ -59,12 +59,27 @@ export function ProfileAvatarEditor({
 }: ProfileAvatarEditorProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState(avatarUrl);
+  const [optimisticUrl, setOptimisticUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const displayUrl = optimisticUrl ?? avatarUrl ?? null;
+
+  useEffect(() => {
+    setOptimisticUrl(null);
+  }, [avatarUrl]);
+
   const initials = getInitials(displayName, email);
   const busy = uploading;
+
+  const initialsFallback = (
+    <span
+      className="flex h-full w-full items-center justify-center bg-muted text-3xl font-semibold text-muted-foreground"
+      aria-hidden
+    >
+      {initials}
+    </span>
+  );
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -123,7 +138,7 @@ export function ProfileAvatarEditor({
         throw new Error(result.error);
       }
 
-      setPreview(cacheBustedUrl);
+      setOptimisticUrl(cacheBustedUrl);
       router.refresh();
     } catch (err) {
       setError(
@@ -135,7 +150,7 @@ export function ProfileAvatarEditor({
   }
 
   function handlePresetSelect(src: string) {
-    setPreview(src);
+    setOptimisticUrl(src);
     setError(null);
     router.refresh();
   }
@@ -149,23 +164,14 @@ export function ProfileAvatarEditor({
             busy && "opacity-70",
           )}
         >
-          {preview ? (
-            <Image
-              src={preview}
-              alt={displayName ?? "Profile photo"}
-              width={112}
-              height={112}
-              className="h-full w-full object-cover"
-              unoptimized
-            />
-          ) : (
-            <span
-              className="flex h-full w-full items-center justify-center bg-muted text-3xl font-semibold text-muted-foreground"
-              aria-hidden
-            >
-              {initials}
-            </span>
-          )}
+          <ProfileAvatarImage
+            src={displayUrl}
+            alt={displayName ?? "Profile photo"}
+            size={112}
+            priority
+            className="h-full w-full object-cover"
+            fallback={initialsFallback}
+          />
         </div>
 
         <Button
@@ -202,7 +208,7 @@ export function ProfileAvatarEditor({
 
       <AvatarPresetPicker
         categories={presetCategories}
-        selectedSrc={preview}
+        selectedSrc={displayUrl}
         disabled={busy}
         onSelect={handlePresetSelect}
         onError={(message) => setError(message || null)}

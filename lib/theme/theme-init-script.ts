@@ -1,2 +1,2 @@
-/** Inline script for <head>/<body> — must run before paint (server-rendered, not in a client component). */
-export const THEME_INIT_SCRIPT = `(function(){try{var d=document.documentElement,c=d.classList;c.remove('light','dark');var t=localStorage.getItem('theme');if(!t||t==='system'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}c.add(t);d.style.colorScheme=t}catch(e){}})();`;
+/** Inline script — force light theme before first paint and clear saved theme preference. */
+export const THEME_INIT_SCRIPT = `(function(){try{var d=document.documentElement;d.classList.remove('dark');d.classList.add('light');d.style.colorScheme='light';localStorage.removeItem('theme')}catch(e){}})();`;

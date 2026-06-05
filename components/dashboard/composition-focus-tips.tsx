@@ -22,7 +22,7 @@ export async function CompositionFocusTips({
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="rounded-xl bg-card p-4">
       <div className="flex items-center gap-2">
         <div className="flex size-8 items-center justify-center rounded-full bg-primary/10">
           <Lightbulb className="size-4 text-primary" />
@@ -79,7 +79,7 @@ export async function CompositionFocusTips({
 
 export function CompositionFocusTipsSkeleton() {
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="rounded-xl bg-card p-4">
       <div className="h-5 w-32 animate-pulse rounded bg-muted" />
       <div className="mt-4 space-y-3">
         <div className="h-16 animate-pulse rounded-lg bg-muted" />

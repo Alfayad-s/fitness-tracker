@@ -18,7 +18,7 @@ type GoalProgressCardProps = {
 
 export function GoalProgressCard({ goal }: GoalProgressCardProps) {
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="rounded-xl bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

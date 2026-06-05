@@ -15,7 +15,7 @@ export function DashboardRecentWorkouts({
 }: DashboardRecentWorkoutsProps) {
   if (workouts.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-xl bg-card px-4 py-8 text-center text-sm text-muted-foreground">
         No workouts yet. Start your first session below.
       </p>
     );
@@ -27,7 +27,7 @@ export function DashboardRecentWorkouts({
         <li key={workout.id}>
           <Link
             href={`/workouts/${workout.id}`}
-            className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-muted/40"
+            className="flex items-center justify-between gap-3 rounded-xl bg-card px-4 py-3 transition-colors hover:bg-muted/40"
           >
             <div className="min-w-0">
               <p className="truncate font-medium">{workout.title}</p>

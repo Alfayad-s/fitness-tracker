@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { AppHeaderBar } from "@/components/layout/app-header-bar";
 import { HeaderStreakPin } from "@/components/layout/header-streak-pin";
 import { useScrollChromeVisible } from "@/components/layout/scroll-chrome-provider";
+import { useStreakLayoutPin } from "@/components/layout/streak-layout-context";
 import { cn } from "@/lib/utils";
 
 type AppMobileChromeProps = {
@@ -19,12 +22,18 @@ export function AppMobileChrome({
   currentStreak,
 }: AppMobileChromeProps) {
   const chromeVisible = useScrollChromeVisible();
+  const { setShowStreakPin } = useStreakLayoutPin();
+
+  useEffect(() => {
+    setShowStreakPin(currentStreak >= 1);
+    return () => setShowStreakPin(false);
+  }, [currentStreak, setShowStreakPin]);
 
   return (
     <>
       <div
         className={cn(
-          "fixed inset-x-0 top-0 z-40 overflow-visible transition-transform duration-300 ease-out will-change-transform",
+          "fixed inset-x-0 top-0 z-40 overflow-visible transition-transform duration-150 ease-out",
           chromeVisible
             ? "translate-y-0"
             : "max-md:-translate-y-full max-md:pointer-events-none",

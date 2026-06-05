@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { ProfileAvatarEditor } from "@/components/profile/profile-avatar-editor";
 import { ProfileForm } from "@/components/profile/profile-form";
-import { ThemeSettings } from "@/components/profile/theme-settings";
 import { Button } from "@/components/ui/button";
+import { requirePageUser } from "@/lib/auth/require-page-user";
 import { getAvatarPresetCategories } from "@/lib/avatars/presets";
 import { getUserProfile } from "@/lib/profile/get-user-profile";
-import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/services/auth-actions";
 
 export const metadata: Metadata = {
@@ -15,15 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
+  const user = await requirePageUser();
   const profile = await getUserProfile(user);
   const presetCategories = getAvatarPresetCategories();
 
@@ -54,8 +44,6 @@ export default async function ProfilePage() {
       />
 
       <ProfileForm profile={profile} />
-
-      <ThemeSettings />
 
       <section className="rounded-xl border border-border bg-card p-4">
         <p className="text-sm text-muted-foreground">Account</p>

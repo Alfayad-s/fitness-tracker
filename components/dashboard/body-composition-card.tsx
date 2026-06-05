@@ -23,7 +23,7 @@ export function BodyCompositionCard({ measurement }: BodyCompositionCardProps) {
 
   if (!display.hasData) {
     return (
-      <section className="rounded-xl border border-dashed border-border bg-card p-4 shadow-sm">
+      <section className="rounded-xl bg-card p-4">
         <div className="flex items-start gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
             <Scale className="size-5 text-muted-foreground" />
@@ -50,7 +50,7 @@ export function BodyCompositionCard({ measurement }: BodyCompositionCardProps) {
   const other = display.composition.filter((m) => !m.featured);
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="rounded-xl bg-card p-4">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

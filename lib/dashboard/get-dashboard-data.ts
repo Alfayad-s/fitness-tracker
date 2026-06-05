@@ -31,6 +31,8 @@ export const getDashboardLatestMeasurement = cache(async (userId: string) =>
 
 export async function loadDashboardOverview(user: User): Promise<{
   summary: DashboardSummary;
+  latestMeasurement: Awaited<ReturnType<typeof getDashboardLatestMeasurement>>;
+  heightCm: string | null;
   dbUnavailable: boolean;
 }> {
   const [profile, allWorkoutDates, { workouts, dbUnavailable }, latestMeasurement] =
@@ -43,6 +45,8 @@ export async function loadDashboardOverview(user: User): Promise<{
 
   return {
     dbUnavailable,
+    latestMeasurement,
+    heightCm: profile.heightCm,
     summary: buildDashboardSummary({
       fullName: profile.fullName,
       username: profile.username,

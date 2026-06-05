@@ -28,6 +28,8 @@ export function LazyPresetAvatar({
   const rootRef = useRef<HTMLButtonElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [retryAttempt, setRetryAttempt] = useState(0);
 
   useEffect(() => {
     const node = rootRef.current;
@@ -46,6 +48,15 @@ export function LazyPresetAvatar({
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    setLoaded(false);
+    setFailed(false);
+    setRetryAttempt(0);
+  }, [src]);
+
+  const imageSrc =
+    retryAttempt > 0 ? `${src}${src.includes("?") ? "&" : "?"}retry=${retryAttempt}` : src;
 
   const isCircle = variant === "circle";
   const isPopOut = variant === "pop-out";
@@ -70,25 +81,42 @@ export function LazyPresetAvatar({
       )}
     >
       {isVisible ? (
-        <>
-          {!loaded && (
-            <span className="absolute inset-0 animate-pulse bg-muted" aria-hidden />
-          )}
-          <Image
-            src={src}
-            alt=""
-            width={80}
-            height={80}
-            loading="lazy"
-            unoptimized
-            onLoad={() => setLoaded(true)}
-            className={cn(
-              "h-full w-full object-contain transition-opacity duration-200",
-              isCircle && "object-cover",
-              loaded ? "opacity-100" : "opacity-0",
+        failed ? (
+          <span
+            className="flex h-full w-full items-center justify-center bg-muted text-[10px] text-muted-foreground"
+            aria-hidden
+          >
+            ?
+          </span>
+        ) : (
+          <>
+            {!loaded && (
+              <span className="absolute inset-0 animate-pulse bg-muted" aria-hidden />
             )}
-          />
-        </>
+            <Image
+              key={imageSrc}
+              src={imageSrc}
+              alt=""
+              width={80}
+              height={80}
+              loading="lazy"
+              unoptimized
+              onLoad={() => setLoaded(true)}
+              onError={() => {
+                if (retryAttempt < 2) {
+                  setRetryAttempt((attempt) => attempt + 1);
+                  return;
+                }
+                setFailed(true);
+              }}
+              className={cn(
+                "h-full w-full object-contain transition-opacity duration-200",
+                isCircle && "object-cover",
+                loaded ? "opacity-100" : "opacity-0",
+              )}
+            />
+          </>
+        )
       ) : (
         <span className="absolute inset-0 bg-muted/80" aria-hidden />
       )}

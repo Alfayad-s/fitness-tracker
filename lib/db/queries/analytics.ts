@@ -93,6 +93,27 @@ export async function fetchWorkoutDatesInRange(
   );
 }
 
+/** Recent distinct workout dates (newest first) — enough for current streak without scanning full history. */
+export async function fetchRecentWorkoutDatesForStreak(
+  userId: string,
+  limit = 400,
+): Promise<string[]> {
+  return withDbFallback(
+    "fetchRecentWorkoutDatesForStreak",
+    async () => {
+      const rows = await db
+        .select({ date: workouts.date })
+        .from(workouts)
+        .where(eq(workouts.userId, userId))
+        .orderBy(desc(workouts.date))
+        .limit(limit);
+
+      return [...new Set(rows.map((r) => r.date))];
+    },
+    [],
+  );
+}
+
 export async function fetchAllWorkoutDates(userId: string): Promise<string[]> {
   return withDbFallback(
     "fetchAllWorkoutDates",

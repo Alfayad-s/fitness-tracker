@@ -4,7 +4,6 @@ import Script from "next/script";
 
 import { Providers } from "@/app/providers";
 import { KeyboardViewportRoot } from "@/components/layout/keyboard-viewport-root";
-import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { THEME_INIT_SCRIPT } from "@/lib/theme/theme-init-script";
 
@@ -45,7 +44,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: APP_NAME,
     startupImage: [
       {
@@ -70,10 +69,7 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#059669" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  themeColor: "#059669",
 };
 
 export default function RootLayout({
@@ -85,20 +81,18 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} light h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground font-sans">
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
         </Script>
-        <ThemeProvider>
-          <Providers>
-            <KeyboardViewportRoot>
-              {children}
-              <Toaster richColors closeButton position="top-center" />
-            </KeyboardViewportRoot>
-          </Providers>
-        </ThemeProvider>
+        <Providers>
+          <KeyboardViewportRoot>
+            {children}
+            <Toaster richColors closeButton position="top-center" />
+          </KeyboardViewportRoot>
+        </Providers>
       </body>
     </html>
   );

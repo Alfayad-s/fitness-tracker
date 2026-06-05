@@ -9,6 +9,10 @@ import { DesktopSidebar } from "@/components/layout/desktop-sidebar";
 import { ScrollChromeProvider } from "@/components/layout/scroll-chrome-provider";
 import { useScrollChromeVisible } from "@/components/layout/scroll-chrome-provider";
 import {
+  StreakLayoutProvider,
+  useStreakLayoutPin,
+} from "@/components/layout/streak-layout-context";
+import {
   isHomeRoute,
   mobileHeaderContentPaddingTop,
   mobileHeaderOnlyPaddingTop,
@@ -19,36 +23,27 @@ import { cn } from "@/lib/utils";
 type AppShellProps = {
   /** Shown on mobile only; desktop uses sidebar navigation. */
   header?: ReactNode;
-  /** Reserve home layout space for the streak pin below the header. */
-  showHomeStreakPin?: boolean;
   children: ReactNode;
 };
 
 const NAV_OFFSET =
   "calc(6.25rem + env(safe-area-inset-bottom, 0px))";
 
-export function AppShell({
-  header,
-  showHomeStreakPin = false,
-  children,
-}: AppShellProps) {
+export function AppShell({ header, children }: AppShellProps) {
   return (
     <ScrollChromeProvider>
-      <AppShellInner header={header} showHomeStreakPin={showHomeStreakPin}>
-        {children}
-      </AppShellInner>
+      <StreakLayoutProvider>
+        <AppShellInner header={header}>{children}</AppShellInner>
+      </StreakLayoutProvider>
     </ScrollChromeProvider>
   );
 }
 
-function AppShellInner({
-  header,
-  showHomeStreakPin = false,
-  children,
-}: AppShellProps) {
+function AppShellInner({ header, children }: AppShellProps) {
   const pathname = usePathname();
   const chromeVisible = useScrollChromeVisible();
-  const showStreakPin = isHomeRoute(pathname) && showHomeStreakPin;
+  const { showStreakPin: hasStreakPin } = useStreakLayoutPin();
+  const showStreakPin = isHomeRoute(pathname) && hasStreakPin;
 
   const mobilePaddingTop = !header
     ? undefined
@@ -69,7 +64,7 @@ function AppShellInner({
 
         <div
           className={cn(
-            "flex min-h-0 flex-1 flex-col transition-[padding] duration-300 ease-out",
+            "flex min-h-0 flex-1 flex-col transition-[padding] duration-150 ease-out",
             mobilePaddingTop,
             header ? "max-md:pb-[var(--app-nav-offset)]" : "pb-0 pt-0",
             !header && "max-md:pb-[var(--app-nav-offset)]",
@@ -90,7 +85,7 @@ function AppShellInner({
 
         <div
           className={cn(
-            "fixed inset-x-0 z-50 transition-transform duration-300 ease-out will-change-transform md:hidden",
+            "fixed inset-x-0 z-50 transition-transform duration-150 ease-out md:hidden",
             "bottom-[var(--keyboard-inset,0px)]",
             chromeVisible
               ? "translate-y-0"

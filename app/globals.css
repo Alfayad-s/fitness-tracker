@@ -83,11 +83,11 @@ body {
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --chart-1: oklch(0.62 0.14 230);
+  --chart-2: oklch(0.68 0.16 55);
+  --chart-3: oklch(0.58 0.1 155);
+  --chart-4: oklch(0.58 0.18 305);
+  --chart-5: oklch(0.45 0.08 250);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -118,11 +118,11 @@ body {
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --chart-1: oklch(0.62 0.14 230);
+  --chart-2: oklch(0.68 0.16 55);
+  --chart-3: oklch(0.58 0.1 155);
+  --chart-4: oklch(0.58 0.18 305);
+  --chart-5: oklch(0.45 0.08 250);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -148,5 +148,41 @@ body {
 @layer components {
   .cn-toast {
     @apply rounded-lg border border-border bg-popover text-popover-foreground shadow-lg;
+  }
+
+  .body-composition-human > div {
+    margin: 0 auto !important;
+  }
+
+  .body-composition-human--left > div {
+    margin: 0 !important;
+  }
+
+  .body-composition-human path {
+    fill: #e4e4e7;
+    stroke: color-mix(in oklch, var(--border) 70%, transparent);
+    stroke-width: 0.6;
+    transition: fill 0.2s ease;
+  }
+
+  .body-composition-human[data-composition] path:hover {
+    stroke: color-mix(in srgb, var(--primary) 45%, var(--border));
+    stroke-width: 1;
+  }
+
+  /* Beat human-body-react styled-components default `path { fill: white }` */
+  .body-composition-human[data-composition] svg path {
+    stroke: color-mix(in oklch, var(--border) 70%, transparent);
+    stroke-width: 0.6;
+  }
+
+  .composition-stat-scroll {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .composition-stat-scroll::-webkit-scrollbar {
+    display: none;
   }
 }

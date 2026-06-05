@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { NutritionTracker } from "@/components/nutrition/nutrition-tracker";
+import { requirePageUser } from "@/lib/auth/require-page-user";
 import { getDailyNutritionLog } from "@/lib/db/queries/nutrition";
 import { listBodyMeasurementsByUser } from "@/lib/db/queries/body-measurements";
 import { calculateDailyNutritionTargets } from "@/lib/measurements/daily-nutrition-targets";
 import { getUserProfile } from "@/lib/profile/get-user-profile";
 import { todayDateString } from "@/lib/workout/format";
-import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Meals & hydration",
@@ -27,14 +26,7 @@ export default async function NutritionPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const logDate = parseLogDate(params.date);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const user = await requirePageUser();
 
   const [profile, { measurements }, log] = await Promise.all([
     getUserProfile(user),

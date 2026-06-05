@@ -28,7 +28,7 @@ export function DashboardOverviewSkeleton() {
 
 export function DashboardFrequencyChartSkeleton() {
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="rounded-xl bg-card p-4">
       <div className="mb-3 space-y-2">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-4 w-28" />

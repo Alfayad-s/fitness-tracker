@@ -39,9 +39,7 @@ export async function syncProfileAvatar(avatarUrl: string) {
     return { error: "Photo saved to your account but failed to sync profile." };
   }
 
-  revalidatePath("/profile");
-  revalidatePath("/dashboard");
-  revalidatePath("/", "layout");
+  revalidatePath("/profile", "layout");
 
   return { success: true as const, avatarUrl };
 }
@@ -125,7 +123,8 @@ export async function updateProfile(
 
   revalidatePath("/profile");
   revalidatePath("/dashboard");
-  revalidatePath("/", "layout");
+  revalidatePath("/workouts");
+  revalidatePath("/progress");
 
   return { success: true };
 }

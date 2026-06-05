@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 
 import { DashboardFrequencySection } from "@/components/dashboard/dashboard-frequency-section";
 import { DashboardOverviewSection } from "@/components/dashboard/dashboard-overview-section";
@@ -10,21 +9,14 @@ import {
   DashboardOverviewSkeleton,
   DashboardRecentSectionSkeleton,
 } from "@/components/dashboard/dashboard-skeletons";
-import { createClient } from "@/lib/supabase/server";
+import { requirePageUser } from "@/lib/auth/require-page-user";
 
 export const metadata: Metadata = {
   title: "Dashboard",
 };
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const user = await requirePageUser();
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-6 md:max-w-3xl">

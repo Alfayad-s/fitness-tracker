@@ -591,7 +591,7 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
       isLoading = false,
       placeholder = "Type your message here...",
       className,
-      theme = "dark",
+      theme = "light",
     },
     ref,
   ) => {

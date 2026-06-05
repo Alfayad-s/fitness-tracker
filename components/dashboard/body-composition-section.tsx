@@ -2,7 +2,6 @@ import { Suspense } from "react";
 
 import { BodyCompositionCard } from "@/components/dashboard/body-composition-card";
 import { BodyCompositionScoreChart } from "@/components/dashboard/body-composition-score-chart";
-import { CompositionScoreHero } from "@/components/dashboard/composition-score-hero";
 import { DailyNutritionTargets } from "@/components/dashboard/daily-nutrition-targets";
 import {
   CompositionFocusTips,
@@ -25,17 +24,12 @@ export async function BodyCompositionSection({
 
   return (
     <div className="flex flex-col gap-3">
-      <CompositionScoreHero
-        latestMeasurement={latest}
-        trendPoints={trendPoints}
-      />
-
       <DailyNutritionTargets user={user} latestMeasurement={latest} />
 
       <BodyCompositionCard measurement={latest} />
 
       {trendPoints.some((p) => p.score != null) && (
-        <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+        <section className="rounded-xl bg-card p-4">
           <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Score trend
           </p>

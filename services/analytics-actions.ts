@@ -14,7 +14,7 @@ import {
   fetchWorkoutDatesInRange,
 } from "@/lib/db/queries/analytics";
 import { listBodyMeasurementsInRange } from "@/lib/db/queries/body-measurements";
-import { createClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/require-user";
 import type {
   BodyAnalyticsSummary,
   ExerciseOption,
@@ -25,16 +25,10 @@ import type {
 async function requireUserId(): Promise<
   { userId: string } | { error: string }
 > {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
+  const user = await getRequestUser();
+  if (!user) {
     return { error: "You must be signed in." };
   }
-
   return { userId: user.id };
 }
 
