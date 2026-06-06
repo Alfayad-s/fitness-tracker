@@ -1,3 +1,8 @@
+import {
+  aggregateExerciseProgressByWeek,
+  isLongDateRange,
+} from "@/lib/analytics/chart-aggregation";
+import type { DateRange } from "@/lib/analytics/date-range";
 import type {
   ExerciseProgressPoint,
   ExerciseProgressSummary,
@@ -15,6 +20,7 @@ export function buildExerciseProgress(
   setRows: SetRowForAnalytics[],
   exerciseId: string,
   exerciseName: string,
+  range?: DateRange,
 ): ExerciseProgressSummary {
   const byDate = new Map<string, SetRowForAnalytics[]>();
 
@@ -27,7 +33,7 @@ export function buildExerciseProgress(
     byDate.set(row.workoutDate, list);
   }
 
-  const points: ExerciseProgressPoint[] = [...byDate.entries()]
+  let points: ExerciseProgressPoint[] = [...byDate.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, rows]) => {
       let maxWeightKg = 0;
@@ -49,6 +55,10 @@ export function buildExerciseProgress(
         bestSetVolume: Math.round(bestSetVolume * 10) / 10,
       };
     });
+
+  if (range && isLongDateRange(range)) {
+    points = aggregateExerciseProgressByWeek(points);
+  }
 
   return { exerciseId, exerciseName, points };
 }

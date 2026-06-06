@@ -88,4 +88,14 @@ After applying the FK, new inserts must use the auth user’s UUID (already how 
 
 - [supabase-auth-setup.md](./supabase-auth-setup.md) — Auth providers & redirects
 - [supabase-storage-setup.md](./supabase-storage-setup.md) — Avatar bucket
+- [sql/storage-rls.sql](./sql/storage-rls.sql) — Storage RLS policies (run in SQL Editor)
 - `.env.example` — template env vars
+
+## Row Level Security (RLS)
+
+| Data | Access path | RLS needed? |
+|------|-------------|-------------|
+| App tables (`users`, `workouts`, …) | Drizzle + `DATABASE_URL` on the server | No — not exposed via PostgREST / anon client |
+| Profile avatars | Supabase Storage via browser client | **Yes** — see [sql/storage-rls.sql](./sql/storage-rls.sql) |
+
+If you later add Supabase client reads on `public` tables, add per-table RLS policies scoped with `auth.uid() = user_id`.

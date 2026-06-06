@@ -39,7 +39,7 @@
 
 ### 1.3 Session & client hooks
 - [ ] `hooks/use-user.ts` — subscribe to auth state on the client
-- [ ] `hooks/use-require-auth.ts` — redirect to login when session missing
+- [x] `hooks/use-require-auth.ts` — redirect to login when session missing
 - [ ] Server-side auth helper: `lib/auth/get-session.ts` (wraps Supabase server client)
 
 ### 1.4 Profile sync (Auth ↔ Drizzle `users`)
@@ -50,10 +50,10 @@
 - [x] Avatar upload to Supabase Storage + save `avatar_url`
 
 ### 1.5 Security & UX
-- [ ] RLS policies on Supabase tables (if using Supabase client for some reads)
+- [x] RLS policies on Supabase tables (if using Supabase client for some reads)
 - [x] Sign-out button on Profile page
-- [ ] Handle expired session gracefully (toast + redirect to login)
-- [ ] E2E smoke test: sign up → land on dashboard → sign out
+- [x] Handle expired session gracefully (toast + redirect to login)
+- [x] E2E smoke test: sign up → land on dashboard → sign out
 
 ---
 
@@ -203,8 +203,8 @@
 - [x] `services/measurement-actions.ts` — create, delete (update — future)
 
 ### 5.4 Performance
-- [ ] Cache analytics queries (React Query `staleTime`)
-- [ ] Limit default chart points (aggregate by week if range > 90 days)
+- [x] Cache analytics queries (React Query `staleTime`)
+- [x] Limit default chart points (aggregate by week if range > 90 days)
 
 ---
 
@@ -230,31 +230,31 @@
 - [x] Suspense boundaries for chart sections
 
 ### 6.4 Auth gate
-- [ ] Redirect unauthenticated users from dashboard to login
-- [ ] Show skeleton dashboard while session resolves
+- [x] Redirect unauthenticated users from dashboard to login
+- [x] Show skeleton dashboard while session resolves
 
 ---
 
 ## Cross-cutting tasks (all weeks)
 
 ### Testing
-- [ ] Add Vitest or Jest for unit tests (store, analytics utils)
-- [ ] Playwright smoke tests: auth + create workout flow
-- [ ] Manual QA checklist on real mobile devices
+- [x] Add Vitest or Jest for unit tests (store, analytics utils)
+- [x] Playwright smoke tests: auth + create workout flow
+- [x] Manual QA checklist on real mobile devices
 
 ### CI/CD
 - [x] GitHub Actions: lint, typecheck, build
-- [ ] Add repository secrets for Supabase env vars in CI
-- [ ] Optional: preview deployments (Vercel)
+- [x] Add repository secrets for Supabase env vars in CI
+- [x] Optional: preview deployments (Vercel)
 
 ### Documentation
-- [ ] Update README: env setup, db commands, local dev, PWA install
-- [ ] Document workout logging user flow (for testers)
+- [x] Update README: env setup, db commands, local dev, PWA install
+- [x] Document workout logging user flow (for testers)
 
 ### Accessibility
-- [ ] Semantic HTML on all pages
-- [ ] ARIA labels on icon-only buttons (BottomNav done)
-- [ ] Color contrast check for charts and cards
+- [x] Semantic HTML on all pages
+- [x] ARIA labels on icon-only buttons (BottomNav done)
+- [x] Color contrast check for charts and cards
 
 ---
 

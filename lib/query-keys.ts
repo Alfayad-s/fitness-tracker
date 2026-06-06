@@ -1,3 +1,13 @@
+import type { DateRangePreset } from "@/lib/analytics/date-range";
+
+/** Analytics responses change slowly — avoid refetching on every tab switch. */
+export const ANALYTICS_STALE_TIME_MS = 5 * 60 * 1000;
+
+export type AnalyticsCustomRange = {
+  from?: string;
+  to?: string;
+};
+
 export const queryKeys = {
   workouts: {
     all: ["workouts"] as const,
@@ -19,5 +29,39 @@ export const queryKeys = {
     all: ["bodyMeasurements"] as const,
     lists: () => [...queryKeys.bodyMeasurements.all, "list"] as const,
     list: () => [...queryKeys.bodyMeasurements.lists()] as const,
+  },
+  analytics: {
+    all: ["analytics"] as const,
+    workout: (preset: DateRangePreset, custom: AnalyticsCustomRange) =>
+      [
+        ...queryKeys.analytics.all,
+        "workout",
+        preset,
+        custom.from ?? "",
+        custom.to ?? "",
+      ] as const,
+    body: (preset: DateRangePreset, custom: AnalyticsCustomRange) =>
+      [
+        ...queryKeys.analytics.all,
+        "body",
+        preset,
+        custom.from ?? "",
+        custom.to ?? "",
+      ] as const,
+    exerciseOptions: () =>
+      [...queryKeys.analytics.all, "exerciseOptions"] as const,
+    exerciseProgress: (
+      exerciseId: string,
+      preset: DateRangePreset,
+      custom: AnalyticsCustomRange,
+    ) =>
+      [
+        ...queryKeys.analytics.all,
+        "exerciseProgress",
+        exerciseId,
+        preset,
+        custom.from ?? "",
+        custom.to ?? "",
+      ] as const,
   },
 } as const;

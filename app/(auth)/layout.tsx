@@ -12,7 +12,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div
+    <main
       className="flex min-h-[100dvh] flex-1 flex-col justify-center px-5 py-10 sm:px-6"
       style={{
         paddingTop: "max(2.5rem, env(safe-area-inset-top))",
@@ -23,6 +23,6 @@ export default function AuthLayout({
         <PageBackButton className="px-0 pt-0" fallbackHref="/dashboard" />
         {children}
       </div>
-    </div>
+    </main>
   );
 }

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const user = await requirePageUser();
+  const user = await requirePageUser("/dashboard");
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-6 md:max-w-3xl">

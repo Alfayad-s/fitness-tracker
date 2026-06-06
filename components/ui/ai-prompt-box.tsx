@@ -710,6 +710,17 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
 
     const hasContent = input.trim() !== "" || files.length > 0;
     const inputBusy = isLoading || isRecording || isProcessing;
+    const primaryActionLabel = isLoading
+      ? "Stop generation"
+      : isProcessing
+        ? "Transcribing…"
+        : isRecording
+          ? "Stop and send"
+          : hasContent
+            ? "Send message"
+            : isVoiceSupported
+              ? "Voice message"
+              : "Voice not supported";
 
     const sendVoiceTranscript = React.useCallback(async () => {
       const text = await stopVoice();
@@ -918,24 +929,11 @@ export const PromptInputBox = React.forwardRef<HTMLDivElement, PromptInputBoxPro
               </div>
             </div>
 
-            <PromptInputAction
-              tooltip={
-                isLoading
-                  ? "Stop generation"
-                  : isProcessing
-                    ? "Transcribing…"
-                    : isRecording
-                      ? "Stop and send"
-                      : hasContent
-                        ? "Send message"
-                        : isVoiceSupported
-                          ? "Voice message"
-                          : "Voice not supported"
-              }
-            >
+            <PromptInputAction tooltip={primaryActionLabel}>
               <Button
                 variant="default"
                 size="icon"
+                aria-label={primaryActionLabel}
                 className={cn(
                   "h-8 w-8 rounded-full transition-all duration-200",
                   isRecording

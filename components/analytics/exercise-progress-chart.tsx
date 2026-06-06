@@ -42,7 +42,11 @@ export function ExerciseProgressChart({
   }));
 
   return (
-    <div className="h-52 w-full">
+    <div
+      className="h-52 w-full"
+      role="img"
+      aria-label={`${exerciseName} progress chart`}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />

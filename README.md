@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fitness Tracker
 
-## Getting Started
+Mobile-first PWA for logging workouts, tracking body measurements, and viewing progress analytics. Built with **Next.js**, **Supabase Auth**, **Drizzle ORM**, and **PostgreSQL**.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 20+
+- A [Supabase](https://supabase.com) project (Auth + Postgres + Storage)
+- Optional: [Groq](https://groq.com) API keys for the AI assistant
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repo-url>
+cd fitness-tracker
+npm install
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Fill in `.env.local` (see [Environment variables](#environment-variables)), then:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run db:migrate   # apply SQL migrations
+npm run db:seed      # default exercise library
+npm run dev          # http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Sign in at `/login` (email OTP, Google, or Apple). You land on `/dashboard`.
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+Copy `.env.example` to `.env.local`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (Auth + Storage) |
+| `DATABASE_URL` | Yes | Postgres connection string — use **transaction pooler** port `6543` ([details](docs/supabase-drizzle-database.md)) |
+| `NEXT_PUBLIC_SITE_URL` | Yes | App origin for OAuth redirects (`http://localhost:3000` locally) |
+| `GROQ_API_KEYS` | No | Comma-separated keys for AI chat |
+| `SUPABASE_SERVICE_ROLE_KEY` | E2E only | Playwright smoke tests (Admin API) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+See also [docs/supabase-auth-setup.md](docs/supabase-auth-setup.md) and [docs/supabase-storage-setup.md](docs/supabase-storage-setup.md).
 
-## Deploy on Vercel
+## Database commands
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Command | Description |
+|---------|-------------|
+| `npm run db:generate` | Generate migration SQL from schema changes |
+| `npm run db:migrate` | Apply migrations in `drizzle/` |
+| `npm run db:push` | Push schema directly (dev only) |
+| `npm run db:studio` | Open Drizzle Studio |
+| `npm run db:seed` | Seed default exercises |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Connection pooling and RLS notes: [docs/supabase-drizzle-database.md](docs/supabase-drizzle-database.md).
+
+## Local development
+
+```bash
+npm run dev              # port 3000 (or PORT=3001 npm run dev)
+npm run dev:free-port    # kill process on default port, then dev
+npm run lint             # ESLint
+npm test                 # Vitest unit tests
+npm run test:integration # DB integration tests (needs DATABASE_URL)
+npm run test:e2e         # Playwright smoke tests (port 3100, needs service role key)
+```
+
+### Phone / OAuth testing
+
+Expose localhost with a tunnel:
+
+```bash
+npm run dev:tunnel
+```
+
+Set `NEXT_PUBLIC_SITE_URL` to the tunnel URL and add it to Supabase redirect URLs. See [docs/cloudflare-tunnel.md](docs/cloudflare-tunnel.md).
+
+### PWA install
+
+Icons and manifest are built in. Install testing guide: [docs/pwa-install-testing.md](docs/pwa-install-testing.md).
+
+## Testing
+
+- **Unit** — Vitest (`lib/workout/session-reducer.test.ts`, analytics utils, etc.)
+- **Integration** — `tests/integration/` (requires `DATABASE_URL`)
+- **E2E** — Playwright on port **3100** so it does not conflict with other apps on `:3000`
+
+```bash
+npx playwright install chromium   # first run only
+npm run test:e2e
+```
+
+CI setup and secrets: [docs/ci-setup.md](docs/ci-setup.md).
+
+## Documentation
+
+| Doc | Topic |
+|-----|-------|
+| [workout-logging-flow.md](docs/workout-logging-flow.md) | Manual tester guide for logging workouts |
+| [manual-qa-mobile.md](docs/manual-qa-mobile.md) | Mobile QA checklist |
+| [accessibility.md](docs/accessibility.md) | Semantic HTML, ARIA, chart contrast |
+| [pwa-install-testing.md](docs/pwa-install-testing.md) | Install prompt on iOS / Android |
+
+## Deploy
+
+### Vercel (recommended)
+
+1. Import the repo in [Vercel](https://vercel.com).
+2. Set the same env vars as `.env.local` (Production + Preview).
+3. Use the **transaction pooler** `DATABASE_URL` for serverless.
+4. Preview deployments run automatically on pull requests when the repo is connected.
+
+See [docs/ci-setup.md](docs/ci-setup.md) for GitHub Actions secrets.
+
+## Project structure
+
+```
+app/(app)/     Authenticated routes (dashboard, workouts, progress, …)
+app/(auth)/    Login and auth callback
+components/    UI and feature components
+lib/           Analytics, auth, db, workout logic
+services/      Server actions
+drizzle/       SQL migrations
+tests/e2e/     Playwright smoke tests
+```
+
+## License
+
+Private — personal project.

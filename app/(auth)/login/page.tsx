@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { LoginForm } from "@/components/auth/login-form";
+import { LoginSessionToast } from "@/components/auth/login-session-toast";
 import { getAuthErrorMessage } from "@/lib/auth/errors";
 
 export const metadata: Metadata = {
@@ -42,6 +44,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       )}
 
       <LoginForm next={params.next} />
+
+      <Suspense fallback={null}>
+        <LoginSessionToast />
+      </Suspense>
     </div>
   );
 }

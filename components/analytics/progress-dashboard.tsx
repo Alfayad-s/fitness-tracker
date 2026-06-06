@@ -2,7 +2,7 @@
 
 import { Loader2, Plus } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BodyWeightChart } from "@/components/analytics/body-weight-chart";
 import { DateRangeFilter } from "@/components/analytics/date-range-filter";
@@ -19,25 +19,18 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import {
+  useBodyAnalytics,
+  useExerciseOptions,
+  useExerciseProgressAnalytics,
+  useMeasurementHistory,
+  useWorkoutAnalytics,
+} from "@/hooks/use-analytics";
+import {
   getDateRange,
   type DateRangePreset,
 } from "@/lib/analytics/date-range";
-import { todayDateString } from "@/lib/workout/format";
-import {
-  fetchBodyAnalytics,
-  fetchExerciseOptions,
-  fetchExerciseProgress,
-  fetchWorkoutAnalytics,
-} from "@/services/analytics-actions";
-import { fetchMeasurementHistory } from "@/services/measurement-actions";
-import type {
-  BodyAnalyticsSummary,
-  ExerciseOption,
-  ExerciseProgressSummary,
-  WorkoutAnalyticsSummary,
-} from "@/types/analytics";
-import type { BodyMeasurement } from "@/types";
 import type { ProgressInitialData } from "@/lib/analytics/load-progress-initial-data";
+import { todayDateString } from "@/lib/workout/format";
 
 type ProgressDashboardProps = {
   initialData?: ProgressInitialData;
@@ -47,78 +40,47 @@ export function ProgressDashboard({ initialData }: ProgressDashboardProps) {
   const [preset, setPreset] = useState<DateRangePreset>("30d");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState(todayDateString());
-  const [loading, setLoading] = useState(!initialData);
-
-  const [workout, setWorkout] = useState<WorkoutAnalyticsSummary | null>(
-    initialData?.workout ?? null,
-  );
-  const [body, setBody] = useState<BodyAnalyticsSummary | null>(
-    initialData?.body ?? null,
-  );
-  const [exercises, setExercises] = useState<ExerciseOption[]>(
-    initialData?.exercises ?? [],
-  );
   const [selectedExerciseId, setSelectedExerciseId] = useState(
     initialData?.exercises[0]?.id ?? "",
   );
-  const [exerciseProgress, setExerciseProgress] =
-    useState<ExerciseProgressSummary | null>(initialData?.exerciseProgress ?? null);
-  const [measurements, setMeasurements] = useState<BodyMeasurement[]>(
-    initialData?.measurements ?? [],
-  );
-  const skipInitialFetch = useRef(!!initialData);
 
   const customRange = { from: customFrom, to: customTo };
+  const useInitialData = preset === "30d" && !customFrom;
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const workoutQuery = useWorkoutAnalytics(
+    preset,
+    customRange,
+    useInitialData ? initialData?.workout : undefined,
+  );
+  const bodyQuery = useBodyAnalytics(
+    preset,
+    customRange,
+    useInitialData ? initialData?.body : undefined,
+  );
+  const exerciseOptionsQuery = useExerciseOptions(
+    useInitialData ? initialData?.exercises : undefined,
+  );
+  const measurementsQuery = useMeasurementHistory(
+    useInitialData ? initialData?.measurements : undefined,
+  );
 
-    const [workoutRes, bodyRes, exerciseOpts, historyRes] = await Promise.all([
-      fetchWorkoutAnalytics(preset, customRange),
-      fetchBodyAnalytics(preset, customRange),
-      fetchExerciseOptions(),
-      fetchMeasurementHistory(),
-    ]);
+  const exercises = exerciseOptionsQuery.data ?? [];
+  const activeExerciseId = selectedExerciseId || exercises[0]?.id || "";
 
-    if (workoutRes.data) setWorkout(workoutRes.data);
-    if (bodyRes.data) setBody(bodyRes.data);
-    if (exerciseOpts.exercises.length > 0) {
-      setExercises(exerciseOpts.exercises);
-      setSelectedExerciseId((prev) => prev || exerciseOpts.exercises[0].id);
-    }
-    if (historyRes.measurements) setMeasurements(historyRes.measurements);
-
-    setLoading(false);
-  }, [preset, customFrom, customTo]);
+  const exerciseProgressQuery = useExerciseProgressAnalytics(
+    activeExerciseId,
+    preset,
+    customRange,
+    useInitialData && activeExerciseId === initialData?.exercises[0]?.id
+      ? initialData?.exerciseProgress
+      : undefined,
+  );
 
   useEffect(() => {
-    if (skipInitialFetch.current) {
-      skipInitialFetch.current = false;
-      return;
+    if (exercises.length > 0 && !selectedExerciseId) {
+      setSelectedExerciseId(exercises[0].id);
     }
-    void load();
-  }, [load]);
-
-  useEffect(() => {
-    if (!selectedExerciseId) {
-      setExerciseProgress(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    void fetchExerciseProgress(
-      selectedExerciseId,
-      preset,
-      customRange,
-    ).then((res) => {
-      if (!cancelled && res.data) setExerciseProgress(res.data);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedExerciseId, preset, customFrom, customTo]);
+  }, [exercises, selectedExerciseId]);
 
   useEffect(() => {
     if (preset === "custom" && !customFrom) {
@@ -126,6 +88,17 @@ export function ProgressDashboard({ initialData }: ProgressDashboardProps) {
       setCustomFrom(range.from);
     }
   }, [preset, customFrom]);
+
+  const loading =
+    workoutQuery.isPending ||
+    bodyQuery.isPending ||
+    exerciseOptionsQuery.isPending ||
+    measurementsQuery.isPending;
+
+  const workout = workoutQuery.data;
+  const body = bodyQuery.data;
+  const measurements = measurementsQuery.data ?? [];
+  const exerciseProgress = exerciseProgressQuery.data;
 
   return (
     <div className="space-y-6">
@@ -218,7 +191,7 @@ export function ProgressDashboard({ initialData }: ProgressDashboardProps) {
                   </label>
                   <select
                     id="exercise-select"
-                    value={selectedExerciseId}
+                    value={activeExerciseId}
                     onChange={(e) => setSelectedExerciseId(e.target.value)}
                     className="flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
                   >
@@ -229,6 +202,11 @@ export function ProgressDashboard({ initialData }: ProgressDashboardProps) {
                     ))}
                   </select>
                 </div>
+                {exerciseProgressQuery.isFetching && !exerciseProgress ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : null}
                 {exerciseProgress && (
                   <ExerciseProgressChart
                     data={exerciseProgress.points}

@@ -1,3 +1,8 @@
+import {
+  aggregateBodyTrendByWeek,
+  isLongDateRange,
+} from "@/lib/analytics/chart-aggregation";
+import type { DateRange } from "@/lib/analytics/date-range";
 import type { BodyAnalyticsSummary, BodyTrendPoint } from "@/types/analytics";
 import type { BodyMeasurement } from "@/types";
 
@@ -11,13 +16,18 @@ function formatRecordedDate(d: Date | string): string {
 
 export function buildBodyAnalytics(
   measurements: BodyMeasurement[],
+  range?: DateRange,
 ): BodyAnalyticsSummary {
-  const points: BodyTrendPoint[] = measurements.map((m) => ({
+  let points: BodyTrendPoint[] = measurements.map((m) => ({
     date: formatRecordedDate(m.recordedAt),
     weightKg: m.weightKg != null ? Number(m.weightKg) : null,
     bodyFatPercent:
       m.bodyFatPercent != null ? Number(m.bodyFatPercent) : null,
   }));
+
+  if (range && isLongDateRange(range)) {
+    points = aggregateBodyTrendByWeek(points);
+  }
 
   return { points };
 }

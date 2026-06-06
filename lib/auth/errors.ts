@@ -3,6 +3,7 @@ export const AUTH_ERROR_CODES = {
   oauthDenied: "oauth_denied",
   oauthFailed: "oauth_failed",
   missingEmail: "missing_email",
+  sessionExpired: "session_expired",
 } as const;
 
 export type AuthErrorCode =
@@ -16,6 +17,8 @@ export const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
     "Sign-in with the provider failed. Check Supabase Google/Apple settings.",
   [AUTH_ERROR_CODES.missingEmail]:
     "No email was returned from the provider. Allow email scope and try again.",
+  [AUTH_ERROR_CODES.sessionExpired]:
+    "Your session expired. Please sign in again.",
 };
 
 export function getAuthErrorMessage(code: string | undefined): string | null {

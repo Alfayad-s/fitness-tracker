@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { SessionExpiryListener } from "@/components/auth/session-expiry-listener";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppHeaderSkeleton } from "@/components/layout/app-header-skeleton";
 import { AppShell } from "@/components/layout/app-shell";
@@ -19,6 +20,7 @@ export default function AppLayout({
         </Suspense>
       }
     >
+      <SessionExpiryListener />
       <WorkoutSyncProvider />
       <InstallPrompt />
       <div className="flex min-h-0 flex-1 flex-col">{children}</div>

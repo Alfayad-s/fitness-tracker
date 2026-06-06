@@ -74,7 +74,7 @@ export async function fetchBodyAnalytics(
       auth.userId,
       range,
     );
-    return { data: buildBodyAnalytics(measurements) };
+    return { data: buildBodyAnalytics(measurements, range) };
   } catch {
     return { error: "Could not load body analytics.", data: null };
   }
@@ -100,7 +100,7 @@ export async function fetchExerciseProgress(
       "Exercise";
 
     return {
-      data: buildExerciseProgress(setRows, exerciseId, name),
+      data: buildExerciseProgress(setRows, exerciseId, name, range),
     };
   } catch {
     return { error: "Could not load exercise progress.", data: null };

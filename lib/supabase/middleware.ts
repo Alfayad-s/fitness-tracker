@@ -1,12 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { AUTH_ERROR_CODES } from "@/lib/auth/errors";
 import {
   AUTH_ROUTES,
   isAuthEntryPath,
   isDeprecatedAuthPath,
   isPublicPath,
 } from "@/lib/auth/routes";
+
+function hasSupabaseAuthCookie(request: NextRequest): boolean {
+  return request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.includes("-auth-token"));
+}
 
 export async function updateSession(request: NextRequest) {
   const isPrefetch =
@@ -60,7 +67,11 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicPath(pathname)) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = AUTH_ROUTES.login;
+    redirectUrl.search = "";
     redirectUrl.searchParams.set("next", pathname);
+    if (hasSupabaseAuthCookie(request)) {
+      redirectUrl.searchParams.set("error", AUTH_ERROR_CODES.sessionExpired);
+    }
     return NextResponse.redirect(redirectUrl);
   }
 

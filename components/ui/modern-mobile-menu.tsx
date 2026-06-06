@@ -94,7 +94,7 @@ function InteractiveMenu({
         const itemClassName = `menu__item ${isActive ? "active" : ""}`;
         const itemContent = (
           <>
-            <div className="menu__icon">
+            <div className="menu__icon" aria-hidden="true">
               <IconComponent className="icon" active={isActive} />
             </div>
             <strong className={`menu__text ${isActive ? "active" : ""}`}>

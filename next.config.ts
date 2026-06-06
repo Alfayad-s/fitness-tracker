@@ -29,8 +29,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // PWA adds a webpack config; this allows `next dev` (Turbopack) while `build` uses --webpack.
   turbopack: {},
-  // Allow Cloudflare quick tunnel host during local dev (phone / external device testing).
-  allowedDevOrigins: ["*.trycloudflare.com"],
+  // Allow Cloudflare quick tunnel + Playwright E2E (127.0.0.1:3100).
+  allowedDevOrigins: ["*.trycloudflare.com", "127.0.0.1", "localhost"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { queryKeys } from "@/lib/query-keys";
+import { queryKeys, ANALYTICS_STALE_TIME_MS } from "@/lib/query-keys";
 import { fetchMeasurementHistory } from "@/services/measurement-actions";
 
 export function useBodyMeasurements() {
@@ -15,5 +15,6 @@ export function useBodyMeasurements() {
       }
       return result.measurements;
     },
+    staleTime: ANALYTICS_STALE_TIME_MS,
   });
 }
