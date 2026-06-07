@@ -115,3 +115,83 @@ export async function createCustomExercise(
 
   return created;
 }
+
+export async function listCustomExercisesForUser(
+  userId: string,
+): Promise<Exercise[]> {
+  return withDbFallback(
+    "listCustomExercisesForUser",
+    async () =>
+      db
+        .select()
+        .from(exercises)
+        .where(
+          and(eq(exercises.isCustom, true), eq(exercises.createdBy, userId)),
+        )
+        .orderBy(exercises.name),
+    [],
+  );
+}
+
+export async function getCustomExerciseForUser(
+  exerciseId: string,
+  userId: string,
+): Promise<Exercise | null> {
+  const [row] = await db
+    .select()
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.id, exerciseId),
+        eq(exercises.isCustom, true),
+        eq(exercises.createdBy, userId),
+      ),
+    )
+    .limit(1);
+
+  return row ?? null;
+}
+
+export async function updateCustomExercise(
+  exerciseId: string,
+  userId: string,
+  input: CreateCustomExerciseInput,
+): Promise<Exercise | null> {
+  const existing = await getCustomExerciseForUser(exerciseId, userId);
+  if (!existing) return null;
+
+  const duplicate = await findCustomExerciseByName(userId, input.name);
+  if (duplicate && duplicate.id !== exerciseId) {
+    throw new Error("DUPLICATE_EXERCISE_NAME");
+  }
+
+  const [updated] = await db
+    .update(exercises)
+    .set({
+      name: input.name.trim(),
+      muscleGroup: input.muscleGroup,
+      equipment: input.equipment ?? null,
+    })
+    .where(eq(exercises.id, exerciseId))
+    .returning();
+
+  return updated ?? null;
+}
+
+export async function deleteCustomExercise(
+  exerciseId: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await db
+    .delete(exercises)
+    .where(
+      and(
+        eq(exercises.id, exerciseId),
+        eq(exercises.isCustom, true),
+        eq(exercises.createdBy, userId),
+      ),
+    )
+    .returning({ id: exercises.id });
+
+  return result.length > 0;
+}

@@ -92,3 +92,45 @@ For each set row:
 
 - [manual-qa-mobile.md](./manual-qa-mobile.md) — device checklist
 - [pwa-install-testing.md](./pwa-install-testing.md) — install + standalone mode
+
+## Templates & daily plans
+
+### Workout templates
+
+1. Open **Workouts → Templates** (`/workouts/templates`)
+2. Save a template from a **completed workout detail** (“Save as template”)
+3. Edit exercises and targets on a template’s edit page
+4. Start from a template on **New workout** under “My templates”
+
+### AI daily suggestion
+
+1. Open **Dashboard** or **New workout** — today’s plan is generated once per day (if none exists)
+2. Review the **Today’s workout** card (title, exercises, AI rationale)
+3. **Upcoming workouts** on the dashboard lists saved plans for future dates
+4. **Accept & start** to pre-fill the active session, **Regenerate** for a new suggestion, or **Skip** for a rest day
+5. Active **weekly programs** override greenfield AI with scheduled template/rest days
+
+### AI coach — plan & exercise import
+
+In **AI Coach** (`/ai`):
+
+| Say / attach | Result |
+|--------------|--------|
+| “Plan a leg day for tomorrow” | Preview → **Save plan for tomorrow** |
+| “Schedule upper body for next Monday” | Preview for that date → confirm save |
+| “Today’s workout should be legs” | Preview plan patch for today |
+| “Skip tomorrow” | Marks that date skipped (confirm first) |
+| “Add Bulgarian split squat to tomorrow” | Preview exercises → **Save exercises** |
+| Workout sheet photo + “import exercises” | Same confirm-then-save flow |
+| “Start my suggested workout” | Navigates to **New workout** |
+
+Future dates are planned via chat (not auto-generated). Saved plans appear under **Upcoming workouts** on the dashboard.
+
+All AI writes require explicit confirmation (same as nutrition/BMA).
+
+### Weekly programs (Phase 2)
+
+1. **Workouts → Templates → Programs** (`/workouts/programs`)
+2. Activate a preset (PPL, Upper/Lower, Full Body ×3) or your own program
+3. Link templates whose names match preset labels (e.g. “Push day”) for auto daily plans
+

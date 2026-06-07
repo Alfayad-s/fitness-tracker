@@ -3,6 +3,10 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import {
+  isMissingOrInvalidSession,
+  isTransientSessionFetchError,
+} from "@/lib/auth/client-session";
 import { AUTH_ROUTES } from "@/lib/auth/routes";
 import { createClient } from "@/lib/supabase/client";
 
@@ -18,19 +22,72 @@ export function useRequireAuth(returnTo?: string): AuthGateStatus {
     let cancelled = false;
     const supabase = createClient();
 
-    void supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (cancelled) return;
+    const redirectToLogin = () => {
+      setStatus("unauthenticated");
+      const next = returnTo ?? pathname;
+      const params = new URLSearchParams({ next });
+      router.replace(`${AUTH_ROUTES.login}?${params.toString()}`);
+    };
 
-      if (error || !user) {
-        setStatus("unauthenticated");
-        const next = returnTo ?? pathname;
-        const params = new URLSearchParams({ next });
-        router.replace(`${AUTH_ROUTES.login}?${params.toString()}`);
-        return;
+    async function resolveSession() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (cancelled) return;
+
+        if (session?.user) {
+          setStatus("authenticated");
+
+          void supabase.auth.getUser().then(({ data: { user }, error }) => {
+            if (cancelled || user) return;
+            if (isTransientSessionFetchError(error)) return;
+            if (isMissingOrInvalidSession(user, error)) {
+              redirectToLogin();
+            }
+          });
+          return;
+        }
+
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+
+        if (cancelled) return;
+
+        if (user) {
+          setStatus("authenticated");
+          return;
+        }
+
+        if (isTransientSessionFetchError(error)) {
+          setStatus("loading");
+          return;
+        }
+
+        if (isMissingOrInvalidSession(user, error)) {
+          redirectToLogin();
+        }
+      } catch (error) {
+        if (cancelled) return;
+
+        if (isTransientSessionFetchError(error)) {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session?.user) {
+            setStatus("authenticated");
+            return;
+          }
+          setStatus("loading");
+          return;
+        }
       }
+    }
 
-      setStatus("authenticated");
-    });
+    void resolveSession();
 
     return () => {
       cancelled = true;

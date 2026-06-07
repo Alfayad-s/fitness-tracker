@@ -12,6 +12,7 @@ import {
   feelingLabel,
 } from "@/lib/workout/format";
 import type { WorkoutDetail } from "@/lib/db/queries/workouts";
+import { SaveAsTemplateButton } from "@/components/workout/save-as-template-button";
 import { deleteWorkout } from "@/services/workout-actions";
 
 type WorkoutDetailViewProps = {
@@ -104,6 +105,11 @@ export function WorkoutDetailView({ workout }: WorkoutDetailViewProps) {
           {error}
         </p>
       )}
+
+      <SaveAsTemplateButton
+        workoutId={workout.id}
+        defaultName={workout.title}
+      />
 
       <Button asChild variant="outline" className="w-full">
         <Link href={`/workouts/${workout.id}/edit`}>

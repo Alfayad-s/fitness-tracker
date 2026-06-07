@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { SessionExpiryListener } from "@/components/auth/session-expiry-listener";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppHeaderSkeleton } from "@/components/layout/app-header-skeleton";
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell, AppShellHeader } from "@/components/layout/app-shell";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { WorkoutSyncProvider } from "@/components/workout/workout-sync-provider";
 
@@ -13,13 +13,12 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AppShell
-      header={
+    <AppShell>
+      <AppShellHeader>
         <Suspense fallback={<AppHeaderSkeleton />}>
           <AppHeader />
         </Suspense>
-      }
-    >
+      </AppShellHeader>
       <SessionExpiryListener />
       <WorkoutSyncProvider />
       <InstallPrompt />

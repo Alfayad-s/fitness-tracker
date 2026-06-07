@@ -3,6 +3,12 @@ import { DbUnavailableAlert } from "@/components/db/db-unavailable-alert";
 import { BodyCompositionSection } from "@/components/dashboard/body-composition-section";
 import { BodyCompositionVisual } from "@/components/dashboard/body-composition-visual";
 import { SlideToStartWorkout } from "@/components/dashboard/slide-to-start-workout";
+import { TodaysWorkoutCard } from "@/components/workout/todays-workout-card";
+import { UpcomingWorkoutPlansCard } from "@/components/dashboard/upcoming-workout-plans-card";
+import {
+  ensureDailyWorkoutPlan,
+  fetchUpcomingWorkoutPlans,
+} from "@/services/daily-plan-actions";
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions";
 import { GoalProgressCard } from "@/components/dashboard/goal-progress-card";
 import { loadDashboardOverview } from "@/lib/dashboard/get-dashboard-data";
@@ -19,6 +25,10 @@ export async function DashboardOverviewSection({
 }: DashboardOverviewSectionProps) {
   const { summary, latestMeasurement, heightCm, dbUnavailable } =
     await loadDashboardOverview(user);
+  const [{ plan: dailyPlan }, schedule] = await Promise.all([
+    ensureDailyWorkoutPlan(),
+    fetchUpcomingWorkoutPlans(7),
+  ]);
   const bodyVisualization = buildBodyCompositionBodyData(
     latestMeasurement,
     heightCm,
@@ -45,6 +55,10 @@ export async function DashboardOverviewSection({
         compositionScore={compositionScore}
         recordedAtLabel={bodyVisualization.recordedAtLabel}
       />
+
+      <TodaysWorkoutCard plan={dailyPlan} compact />
+
+      <UpcomingWorkoutPlansCard plans={[...schedule.upcomingPlans]} />
 
       <SlideToStartWorkout />
 

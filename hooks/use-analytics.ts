@@ -32,8 +32,8 @@ export function useWorkoutAnalytics(
     queryKey: queryKeys.analytics.workout(preset, custom),
     queryFn: async () => {
       const result = await fetchWorkoutAnalytics(preset, custom);
-      if (result.error || !result.data) {
-        throw new Error(result.error ?? "Could not load workout analytics.");
+      if ("error" in result) {
+        throw new Error(result.error);
       }
       return result.data;
     },
@@ -51,8 +51,8 @@ export function useBodyAnalytics(
     queryKey: queryKeys.analytics.body(preset, custom),
     queryFn: async () => {
       const result = await fetchBodyAnalytics(preset, custom);
-      if (result.error || !result.data) {
-        throw new Error(result.error ?? "Could not load body analytics.");
+      if ("error" in result) {
+        throw new Error(result.error);
       }
       return result.data;
     },
@@ -86,8 +86,8 @@ export function useExerciseProgressAnalytics(
     queryKey: queryKeys.analytics.exerciseProgress(exerciseId, preset, custom),
     queryFn: async () => {
       const result = await fetchExerciseProgress(exerciseId, preset, custom);
-      if (result.error || !result.data) {
-        throw new Error(result.error ?? "Could not load exercise progress.");
+      if ("error" in result) {
+        throw new Error(result.error);
       }
       return result.data;
     },

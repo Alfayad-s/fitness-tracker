@@ -122,7 +122,7 @@ export function workoutSessionReducer(
         endedAt: null,
         pausedAt: null,
         totalPausedMs: 0,
-        exercises: [],
+        exercises: action.input.exercises ?? [],
         restTimer: createDefaultRestTimer(),
       };
       return { session: next };

@@ -14,8 +14,19 @@ import {
   shouldParseAsNutritionLog,
   shouldParseNutritionFromText,
 } from "@/lib/ai/should-parse-nutrition-upload";
+import {
+  shouldParseAsExerciseImport,
+  shouldParseExerciseImportFromText,
+} from "@/lib/ai/should-parse-exercise-import";
+import {
+  shouldNavigateToSuggestedWorkout,
+  shouldParseWorkoutPlanFromText,
+} from "@/lib/ai/should-parse-workout-plan";
+import { todayDateString } from "@/lib/workout/format";
 import type { BmaExtraction } from "@/types/schemas/bma-report";
 import type { NutritionScanExtraction } from "@/types/schemas/nutrition-scan";
+import type { ExerciseImportExtraction } from "@/types/schemas/exercise-import";
+import type { WorkoutPlanPatch } from "@/types/schemas/daily-plan";
 import type { ChatAttachment, ChatMessage } from "@/types/ai";
 
 const INTRO_DURATION_MS = 2200;
@@ -45,7 +56,7 @@ function userMessageContent(file: File, note: string): string {
   return "Attached image";
 }
 
-type LoadingKind = "text" | "bma" | "vision" | "nutrition";
+type LoadingKind = "text" | "bma" | "vision" | "nutrition" | "workout-plan" | "exercise-import";
 
 function messagesForApi(messages: ChatMessage[]) {
   return messages.map((m) => ({ role: m.role, content: m.content }));
@@ -117,6 +128,42 @@ function AiAssistantViewInner({
                 content: savedContent,
                 nutritionSaved: true,
                 nutritionExtraction: undefined,
+              }
+            : msg,
+        ),
+      );
+    },
+    [],
+  );
+
+  const handleWorkoutPlanSaved = useCallback(
+    (messageIndex: number, savedContent: string) => {
+      setMessages((prev) =>
+        prev.map((msg, i) =>
+          i === messageIndex
+            ? {
+                ...msg,
+                content: savedContent,
+                workoutPlanSaved: true,
+                workoutPlanPatch: undefined,
+              }
+            : msg,
+        ),
+      );
+    },
+    [],
+  );
+
+  const handleExerciseImportSaved = useCallback(
+    (messageIndex: number, savedContent: string) => {
+      setMessages((prev) =>
+        prev.map((msg, i) =>
+          i === messageIndex
+            ? {
+                ...msg,
+                content: savedContent,
+                exerciseImportSaved: true,
+                exerciseImport: undefined,
               }
             : msg,
         ),
@@ -219,6 +266,96 @@ function AiAssistantViewInner({
     [appendAssistantReply],
   );
 
+  const requestWorkoutPlanScan = useCallback(
+    async (text: string, nextMessages: ChatMessage[]) => {
+      const response = await fetch("/api/ai/workout-plan-scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          referenceDate: todayDateString(),
+        }),
+      });
+
+      const data = (await response.json()) as {
+        message?: ChatMessage & { workoutPlanPatch?: WorkoutPlanPatch };
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setError(data.error ?? "Could not update workout plan.");
+        return false;
+      }
+
+      if (data.message?.content) {
+        appendAssistantReply(nextMessages, {
+          role: "assistant",
+          content: data.message.content,
+          workoutPlanPatch: data.message.workoutPlanPatch,
+          workoutPlanMeta: data.message.workoutPlanMeta,
+          workoutPlanSaved: false,
+        });
+        return true;
+      }
+
+      setError("Empty response from AI.");
+      return false;
+    },
+    [appendAssistantReply],
+  );
+
+  const requestExerciseImportScan = useCallback(
+    async (
+      payload: { file?: File; text?: string; note?: string },
+      nextMessages: ChatMessage[],
+    ) => {
+      let response: Response;
+
+      if (payload.file) {
+        const formData = new FormData();
+        formData.append("file", payload.file);
+        if (payload.note) formData.append("note", payload.note);
+        response = await fetch("/api/ai/exercise-import-scan", {
+          method: "POST",
+          body: formData,
+        });
+      } else if (payload.text) {
+        response = await fetch("/api/ai/exercise-import-scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: payload.text }),
+        });
+      } else {
+        setError("Nothing to scan.");
+        return false;
+      }
+
+      const data = (await response.json()) as {
+        message?: ChatMessage & { exerciseImport?: ExerciseImportExtraction };
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setError(data.error ?? "Could not extract exercises.");
+        return false;
+      }
+
+      if (data.message?.content) {
+        appendAssistantReply(nextMessages, {
+          role: "assistant",
+          content: data.message.content,
+          exerciseImport: data.message.exerciseImport,
+          exerciseImportSaved: false,
+        });
+        return true;
+      }
+
+      setError("Empty response from AI.");
+      return false;
+    },
+    [appendAssistantReply],
+  );
+
   const requestBmaScan = useCallback(
     async (file: File, note: string, nextMessages: ChatMessage[]) => {
       const formData = new FormData();
@@ -283,8 +420,15 @@ function AiAssistantViewInner({
 
         const useBmaScan = shouldParseAsBmaReport(file, trimmed);
         const useNutritionScan = shouldParseAsNutritionLog(file, trimmed);
+        const useExerciseImport = shouldParseAsExerciseImport(file, trimmed);
         setLoadingKind(
-          useBmaScan ? "bma" : useNutritionScan ? "nutrition" : "vision",
+          useBmaScan
+            ? "bma"
+            : useNutritionScan
+              ? "nutrition"
+              : useExerciseImport
+                ? "exercise-import"
+                : "vision",
         );
         setIsLoading(true);
 
@@ -297,6 +441,11 @@ function AiAssistantViewInner({
             }
           } else if (useNutritionScan) {
             await requestNutritionScan(
+              { file, note: trimmed },
+              nextMessages,
+            );
+          } else if (useExerciseImport) {
+            await requestExerciseImportScan(
               { file, note: trimmed },
               nextMessages,
             );
@@ -317,12 +466,38 @@ function AiAssistantViewInner({
       setMessages(nextMessages);
 
       const useNutritionScan = shouldParseNutritionFromText(trimmed);
-      setLoadingKind(useNutritionScan ? "nutrition" : "text");
+      const useWorkoutPlan = shouldParseWorkoutPlanFromText(trimmed);
+      const useExerciseImport = shouldParseExerciseImportFromText(trimmed);
+
+      if (shouldNavigateToSuggestedWorkout(trimmed)) {
+        router.push("/workouts/new");
+        return;
+      }
+
+      setLoadingKind(
+        useNutritionScan
+          ? "nutrition"
+          : useWorkoutPlan
+            ? "workout-plan"
+            : useExerciseImport
+              ? "exercise-import"
+              : "text",
+      );
       setIsLoading(true);
 
       try {
         if (useNutritionScan) {
           await requestNutritionScan({ text: trimmed }, nextMessages);
+          return;
+        }
+
+        if (useWorkoutPlan) {
+          await requestWorkoutPlanScan(trimmed, nextMessages);
+          return;
+        }
+
+        if (useExerciseImport) {
+          await requestExerciseImportScan({ text: trimmed }, nextMessages);
           return;
         }
 
@@ -359,6 +534,8 @@ function AiAssistantViewInner({
       appendAssistantReply,
       requestBmaScan,
       requestNutritionScan,
+      requestWorkoutPlanScan,
+      requestExerciseImportScan,
       requestVisionChat,
       stopSpeech,
     ],
@@ -388,6 +565,8 @@ function AiAssistantViewInner({
           onTypingComplete={() => setTypingMessageIndex(null)}
           onBmaSaved={handleBmaSaved}
           onNutritionSaved={handleNutritionSaved}
+          onWorkoutPlanSaved={handleWorkoutPlanSaved}
+          onExerciseImportSaved={handleExerciseImportSaved}
         />
       </main>
 
@@ -399,7 +578,7 @@ function AiAssistantViewInner({
           <PromptInputBox
             theme="light"
             isLoading={isLoading}
-            placeholder="Ask anything, tap the mic to talk, or attach food / BMA photos…"
+            placeholder="Ask about training, log meals, update today's workout, or import exercises…"
             onSend={handleSend}
           />
         </div>

@@ -1,6 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
+import {
+  Children,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { usePathname } from "next/navigation";
 
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -20,29 +25,56 @@ import {
 } from "@/lib/layout/mobile-header-metrics";
 import { cn } from "@/lib/utils";
 
+/** Marker slot — render mobile header inside AppShell so layout context is available. */
+export function AppShellHeader({ children }: { children: ReactNode }) {
+  return children;
+}
+
+AppShellHeader.displayName = "AppShellHeader";
+
 type AppShellProps = {
-  /** Shown on mobile only; desktop uses sidebar navigation. */
-  header?: ReactNode;
   children: ReactNode;
 };
 
 const NAV_OFFSET =
   "calc(6.25rem + env(safe-area-inset-bottom, 0px))";
 
-export function AppShell({ header, children }: AppShellProps) {
+function splitAppShellChildren(children: ReactNode): {
+  header: ReactNode;
+  content: ReactNode[];
+} {
+  const content: ReactNode[] = [];
+  let header: ReactNode = null;
+
+  Children.forEach(children, (child) => {
+    if (
+      isValidElement(child) &&
+      (child.type as { displayName?: string }).displayName === "AppShellHeader"
+    ) {
+      header = (child as ReactElement<{ children: ReactNode }>).props.children;
+      return;
+    }
+    content.push(child);
+  });
+
+  return { header, content };
+}
+
+export function AppShell({ children }: AppShellProps) {
   return (
     <ScrollChromeProvider>
       <StreakLayoutProvider>
-        <AppShellInner header={header}>{children}</AppShellInner>
+        <AppShellInner>{children}</AppShellInner>
       </StreakLayoutProvider>
     </ScrollChromeProvider>
   );
 }
 
-function AppShellInner({ header, children }: AppShellProps) {
+function AppShellInner({ children }: AppShellProps) {
   const pathname = usePathname();
   const chromeVisible = useScrollChromeVisible();
   const { showStreakPin: hasStreakPin } = useStreakLayoutPin();
+  const { header, content } = splitAppShellChildren(children);
   const showStreakPin = isHomeRoute(pathname) && hasStreakPin;
 
   const mobilePaddingTop = !header
@@ -80,7 +112,7 @@ function AppShellInner({ header, children }: AppShellProps) {
           }
         >
           <PageBackButton />
-          {children}
+          {content}
         </div>
 
         <div

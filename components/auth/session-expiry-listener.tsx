@@ -5,6 +5,10 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { AUTH_ERROR_CODES } from "@/lib/auth/errors";
+import {
+  isMissingOrInvalidSession,
+  isTransientSessionFetchError,
+} from "@/lib/auth/client-session";
 import { AUTH_ROUTES, isPublicPath } from "@/lib/auth/routes";
 import { createClient } from "@/lib/supabase/client";
 
@@ -43,17 +47,35 @@ export function SessionExpiryListener() {
       }
     });
 
-    const interval = window.setInterval(async () => {
+    const interval = window.setInterval(() => {
       if (isPublicPath(window.location.pathname)) return;
+      if (document.visibilityState !== "visible") return;
 
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+      void (async () => {
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
 
-      if (error || !user) {
-        handleExpired();
-      }
+          if (!session?.user) {
+            handleExpired();
+            return;
+          }
+
+          const {
+            data: { user },
+            error,
+          } = await supabase.auth.getUser();
+
+          if (user) return;
+          if (isTransientSessionFetchError(error)) return;
+          if (isMissingOrInvalidSession(user, error)) {
+            handleExpired();
+          }
+        } catch (error) {
+          if (isTransientSessionFetchError(error)) return;
+        }
+      })();
     }, SESSION_CHECK_MS);
 
     return () => {

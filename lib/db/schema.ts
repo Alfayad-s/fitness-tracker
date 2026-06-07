@@ -48,6 +48,25 @@ export const mealTypeEnum = pgEnum("meal_type", [
   "other",
 ]);
 
+export const templateSourceEnum = pgEnum("template_source", [
+  "manual",
+  "ai",
+  "imported",
+]);
+
+export const dailyPlanStatusEnum = pgEnum("daily_plan_status", [
+  "suggested",
+  "accepted",
+  "skipped",
+  "completed",
+]);
+
+export const programSourceEnum = pgEnum("program_source", [
+  "manual",
+  "ai",
+  "preset",
+]);
+
 /** Profile row; `id` matches `auth.users.id` after sync (see lib/auth/sync-user.ts). */
 export const users = pgTable(
   "users",
@@ -236,12 +255,127 @@ export const waterEntries = pgTable(
   ],
 );
 
+export const workoutTemplates = pgTable(
+  "workout_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    source: templateSourceEnum("source").notNull().default("manual"),
+    isFavorite: boolean("is_favorite").notNull().default(false),
+    ...auditTimestamps,
+  },
+  (table) => [
+    index("workout_templates_user_id_idx").on(table.userId),
+    index("workout_templates_user_id_name_idx").on(table.userId, table.name),
+  ],
+);
+
+export const templateExercises = pgTable(
+  "template_exercises",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => workoutTemplates.id, { onDelete: "cascade" }),
+    exerciseId: uuid("exercise_id")
+      .notNull()
+      .references(() => exercises.id, { onDelete: "restrict" }),
+    orderIndex: integer("order_index").notNull(),
+    targetSets: smallint("target_sets"),
+    targetReps: smallint("target_reps"),
+    targetWeightKg: numeric("target_weight_kg", { precision: 7, scale: 2 }),
+    notes: text("notes"),
+  },
+  (table) => [
+    index("template_exercises_template_id_idx").on(table.templateId),
+    index("template_exercises_exercise_id_idx").on(table.exerciseId),
+  ],
+);
+
+export const dailyWorkoutPlans = pgTable(
+  "daily_workout_plans",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    planDate: date("plan_date").notNull(),
+    templateId: uuid("template_id").references(() => workoutTemplates.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    status: dailyPlanStatusEnum("status").notNull().default("suggested"),
+    aiRationale: text("ai_rationale"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("daily_workout_plans_user_id_plan_date_idx").on(
+      table.userId,
+      table.planDate,
+    ),
+  ],
+);
+
+export const workoutPrograms = pgTable(
+  "workout_programs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    source: programSourceEnum("source").notNull().default("manual"),
+    isActive: boolean("is_active").notNull().default(false),
+    ...auditTimestamps,
+  },
+  (table) => [
+    index("workout_programs_user_id_idx").on(table.userId),
+    index("workout_programs_user_id_active_idx").on(
+      table.userId,
+      table.isActive,
+    ),
+  ],
+);
+
+export const programDays = pgTable(
+  "program_days",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    programId: uuid("program_id")
+      .notNull()
+      .references(() => workoutPrograms.id, { onDelete: "cascade" }),
+    dayOfWeek: smallint("day_of_week").notNull(),
+    templateId: uuid("template_id").references(() => workoutTemplates.id, {
+      onDelete: "set null",
+    }),
+    isRestDay: boolean("is_rest_day").notNull().default(false),
+    label: text("label"),
+  },
+  (table) => [
+    index("program_days_program_id_idx").on(table.programId),
+    index("program_days_program_day_idx").on(
+      table.programId,
+      table.dayOfWeek,
+    ),
+  ],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   workouts: many(workouts),
   exercises: many(exercises),
   bodyMeasurements: many(bodyMeasurements),
   mealEntries: many(mealEntries),
   waterEntries: many(waterEntries),
+  workoutTemplates: many(workoutTemplates),
+  dailyWorkoutPlans: many(dailyWorkoutPlans),
+  workoutPrograms: many(workoutPrograms),
 }));
 
 export const exercisesRelations = relations(exercises, ({ one, many }) => ({
@@ -250,6 +384,7 @@ export const exercisesRelations = relations(exercises, ({ one, many }) => ({
     references: [users.id],
   }),
   workoutExercises: many(workoutExercises),
+  templateExercises: many(templateExercises),
 }));
 
 export const workoutsRelations = relations(workouts, ({ one, many }) => ({
@@ -303,5 +438,68 @@ export const waterEntriesRelations = relations(waterEntries, ({ one }) => ({
   user: one(users, {
     fields: [waterEntries.userId],
     references: [users.id],
+  }),
+}));
+
+export const workoutTemplatesRelations = relations(
+  workoutTemplates,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [workoutTemplates.userId],
+      references: [users.id],
+    }),
+    templateExercises: many(templateExercises),
+    dailyPlans: many(dailyWorkoutPlans),
+    programDays: many(programDays),
+  }),
+);
+
+export const templateExercisesRelations = relations(
+  templateExercises,
+  ({ one }) => ({
+    template: one(workoutTemplates, {
+      fields: [templateExercises.templateId],
+      references: [workoutTemplates.id],
+    }),
+    exercise: one(exercises, {
+      fields: [templateExercises.exerciseId],
+      references: [exercises.id],
+    }),
+  }),
+);
+
+export const dailyWorkoutPlansRelations = relations(
+  dailyWorkoutPlans,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [dailyWorkoutPlans.userId],
+      references: [users.id],
+    }),
+    template: one(workoutTemplates, {
+      fields: [dailyWorkoutPlans.templateId],
+      references: [workoutTemplates.id],
+    }),
+  }),
+);
+
+export const workoutProgramsRelations = relations(
+  workoutPrograms,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [workoutPrograms.userId],
+      references: [users.id],
+    }),
+    programDays: many(programDays),
+  }),
+);
+
+export const programDaysRelations = relations(programDays, ({ one }) => ({
+  program: one(workoutPrograms, {
+    fields: [programDays.programId],
+    references: [workoutPrograms.id],
+  }),
+  template: one(workoutTemplates, {
+    fields: [programDays.templateId],
+    references: [workoutTemplates.id],
   }),
 }));

@@ -4,20 +4,28 @@ import { FileText, Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { BmaSaveButton } from "@/components/ai/bma-save-button";
+import { ChatMarkdown, chatMarkdownToPlainText } from "@/components/ai/chat-markdown";
+import { ExerciseImportPreviewCard } from "@/components/ai/exercise-import-preview-card";
+import { ExerciseImportSaveButton } from "@/components/ai/exercise-import-save-button";
+import { NutritionPreviewCard } from "@/components/ai/nutrition-preview-card";
 import { NutritionSaveButton } from "@/components/ai/nutrition-save-button";
+import { WorkoutPlanPreviewCard } from "@/components/ai/workout-plan-preview-card";
+import { WorkoutPlanSaveButton } from "@/components/ai/workout-plan-save-button";
 import { ReadReplyButton } from "@/components/ai/read-reply-button";
 import { useReplySpeech } from "@/components/ai/reply-speech-provider";
 import { TypewriterText } from "@/components/ai/typewriter-text";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/types/ai";
 
-type LoadingKind = "text" | "bma" | "vision" | "nutrition";
+type LoadingKind = "text" | "bma" | "vision" | "nutrition" | "workout-plan" | "exercise-import";
 
 const LOADING_LABEL: Record<LoadingKind, string> = {
   text: "Thinking…",
   bma: "Reading body report…",
   vision: "Analyzing image…",
   nutrition: "Reading meals & hydration…",
+  "workout-plan": "Updating workout plan…",
+  "exercise-import": "Extracting exercises…",
 };
 
 const hideScrollbar =
@@ -32,6 +40,8 @@ type AiChatMessagesProps = {
   onTypingComplete?: () => void;
   onBmaSaved?: (messageIndex: number, savedContent: string) => void;
   onNutritionSaved?: (messageIndex: number, savedContent: string) => void;
+  onWorkoutPlanSaved?: (messageIndex: number, savedContent: string) => void;
+  onExerciseImportSaved?: (messageIndex: number, savedContent: string) => void;
   /** Speak assistant reply when typewriter animation finishes. */
   autoReadReply?: boolean;
 };
@@ -71,6 +81,8 @@ function AssistantMessageBubble({
   onProgress,
   onBmaSaved,
   onNutritionSaved,
+  onWorkoutPlanSaved,
+  onExerciseImportSaved,
   autoReadReply = true,
 }: {
   message: ChatMessage;
@@ -80,15 +92,39 @@ function AssistantMessageBubble({
   onProgress: () => void;
   onBmaSaved?: (messageIndex: number, savedContent: string) => void;
   onNutritionSaved?: (messageIndex: number, savedContent: string) => void;
+  onWorkoutPlanSaved?: (messageIndex: number, savedContent: string) => void;
+  onExerciseImportSaved?: (messageIndex: number, savedContent: string) => void;
   autoReadReply?: boolean;
 }) {
   const { speak, supported } = useReplySpeech();
   const messageId = `assistant-${index}`;
-  const isTyping = index === typingMessageIndex;
+  const isPendingStructured = Boolean(
+    (message.workoutPlanPatch && !message.workoutPlanSaved) ||
+      (message.nutritionExtraction && !message.nutritionSaved) ||
+      (message.exerciseImport && !message.exerciseImportSaved),
+  );
+  const isTyping = index === typingMessageIndex && !isPendingStructured;
   const showBmaSave =
     message.bmaExtraction && !message.bmaSaved && !isTyping;
   const showNutritionSave =
     message.nutritionExtraction && !message.nutritionSaved && !isTyping;
+  const showWorkoutPlanSave =
+    message.workoutPlanPatch && !message.workoutPlanSaved && !isTyping;
+  const showExerciseImportSave =
+    message.exerciseImport && !message.exerciseImportSaved && !isTyping;
+
+  const hasStructuredPreview =
+    showWorkoutPlanSave ||
+    showNutritionSave ||
+    showExerciseImportSave;
+
+  const speechText = chatMarkdownToPlainText(message.content);
+
+  useEffect(() => {
+    if (index === typingMessageIndex && isPendingStructured) {
+      onTypingComplete?.();
+    }
+  }, [index, typingMessageIndex, isPendingStructured, onTypingComplete]);
 
   const handleTypingComplete = () => {
     onTypingComplete?.();
@@ -97,13 +133,22 @@ function AssistantMessageBubble({
       supported &&
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      speak(messageId, message.content);
+      speak(messageId, speechText);
     }
   };
 
   return (
     <div>
-      {isTyping ? (
+      {showWorkoutPlanSave && message.workoutPlanPatch ? (
+        <WorkoutPlanPreviewCard
+          patch={message.workoutPlanPatch}
+          meta={message.workoutPlanMeta}
+        />
+      ) : showNutritionSave && message.nutritionExtraction ? (
+        <NutritionPreviewCard extraction={message.nutritionExtraction} />
+      ) : showExerciseImportSave && message.exerciseImport ? (
+        <ExerciseImportPreviewCard extraction={message.exerciseImport} />
+      ) : isTyping ? (
         <TypewriterText
           text={message.content}
           animate
@@ -111,11 +156,11 @@ function AssistantMessageBubble({
           onProgress={onProgress}
         />
       ) : (
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <ChatMarkdown text={message.content} />
       )}
 
-      {!isTyping && (
-        <ReadReplyButton messageId={messageId} text={message.content} />
+      {!isTyping && !hasStructuredPreview && (
+        <ReadReplyButton messageId={messageId} text={speechText} />
       )}
 
       {showBmaSave && message.bmaExtraction && (
@@ -134,6 +179,24 @@ function AssistantMessageBubble({
         />
       )}
 
+      {showWorkoutPlanSave && message.workoutPlanPatch && (
+        <WorkoutPlanSaveButton
+          patch={message.workoutPlanPatch}
+          saved={message.workoutPlanSaved}
+          onSaved={(savedContent) => onWorkoutPlanSaved?.(index, savedContent)}
+        />
+      )}
+
+      {showExerciseImportSave && message.exerciseImport && (
+        <ExerciseImportSaveButton
+          extraction={message.exerciseImport}
+          saved={message.exerciseImportSaved}
+          onSaved={(savedContent) =>
+            onExerciseImportSaved?.(index, savedContent)
+          }
+        />
+      )}
+
     </div>
   );
 }
@@ -147,6 +210,8 @@ export function AiChatMessages({
   onTypingComplete,
   onBmaSaved,
   onNutritionSaved,
+  onWorkoutPlanSaved,
+  onExerciseImportSaved,
   autoReadReply = true,
 }: AiChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -181,7 +246,9 @@ export function AiChatMessages({
             "What can you tell from this photo? (attach image)",
             "Scan my InBody report (attach + say scan body report)",
             "I had grilled chicken and rice for lunch (log my meal)",
-            "How am I progressing on my main lifts?",
+            "Plan a leg day for tomorrow",
+            "Add Romanian deadlift to tomorrow's workout",
+            "Skip today's workout",
           ].map((example) => (
             <li
               key={example}
@@ -202,12 +269,20 @@ export function AiChatMessages({
         hideScrollbar,
       )}
     >
-      {messages.map((message, index) => (
+      {messages.map((message, index) => {
+        const isStructuredAssistant =
+          message.role === "assistant" &&
+          ((message.workoutPlanPatch && !message.workoutPlanSaved) ||
+            (message.nutritionExtraction && !message.nutritionSaved) ||
+            (message.exerciseImport && !message.exerciseImportSaved));
+
+        return (
         <div
           key={`${message.role}-${index}`}
           className={cn(
             "flex",
             message.role === "user" ? "justify-end" : "justify-start",
+            isStructuredAssistant && "w-full",
           )}
         >
           <div
@@ -216,6 +291,8 @@ export function AiChatMessages({
               message.role === "user"
                 ? "rounded-br-md bg-neutral-900 text-white"
                 : "rounded-bl-md border border-neutral-200 bg-neutral-50 text-neutral-900",
+              isStructuredAssistant &&
+                "w-full max-w-full border-0 bg-transparent px-0 py-0",
             )}
           >
             {message.role === "user" ? (
@@ -229,12 +306,15 @@ export function AiChatMessages({
                 onProgress={scrollToBottom}
                 onBmaSaved={onBmaSaved}
                 onNutritionSaved={onNutritionSaved}
+                onWorkoutPlanSaved={onWorkoutPlanSaved}
+                onExerciseImportSaved={onExerciseImportSaved}
                 autoReadReply={autoReadReply}
               />
             )}
           </div>
         </div>
-      ))}
+        );
+      })}
 
       {isLoading && (
         <div className="flex justify-start">

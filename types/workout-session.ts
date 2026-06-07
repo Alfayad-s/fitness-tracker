@@ -115,6 +115,8 @@ export type StartWorkoutInput = {
   title: string;
   date: string;
   notes?: string | null;
+  /** Pre-seeded exercises when starting from a template or daily plan. */
+  exercises?: SessionExercise[];
 };
 
 export type CompleteWorkoutInput = {

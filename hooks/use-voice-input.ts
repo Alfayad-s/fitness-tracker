@@ -53,7 +53,7 @@ type UseVoiceInputOptions = {
 };
 
 export function useVoiceInput(options?: UseVoiceInputOptions) {
-  const mode = getVoiceInputMode();
+  const [mode, setMode] = useState<VoiceInputMode>("none");
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +64,10 @@ export function useVoiceInput(options?: UseVoiceInputOptions) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    setMode(getVoiceInputMode());
+  }, []);
 
   const cleanupStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());

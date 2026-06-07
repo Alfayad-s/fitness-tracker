@@ -17,12 +17,20 @@ import {
 } from "@/lib/db/queries/analytics";
 import { listBodyMeasurementsByUser } from "@/lib/db/queries/body-measurements";
 import {
+  getDailyPlanForUser,
+  listUpcomingDailyPlansForUser,
+} from "@/lib/db/queries/daily-plans";
+import { listCustomExercisesForUser } from "@/lib/db/queries/exercises";
+import { listWorkoutTemplatesForUser } from "@/lib/db/queries/workout-templates";
+import {
   getWorkoutDetail,
   listWorkoutsByUser,
   type WorkoutDetail,
 } from "@/lib/db/queries/workouts";
 import { GOAL_OPTIONS, GENDER_OPTIONS } from "@/lib/profile/labels";
 import { getUserProfile } from "@/lib/profile/get-user-profile";
+import { todayDateString } from "@/lib/workout/format";
+import { addDaysToDateString } from "@/lib/workout/plan-dates";
 
 const RECENT_WORKOUT_DETAIL_LIMIT = 15;
 const WORKOUT_LIST_LIMIT = 50;
@@ -65,6 +73,9 @@ export async function buildUserAiContext(
     setRows90,
     dates90,
     exercisesUsed,
+    dailyPlan,
+    templates,
+    customExercises,
   ] = await Promise.all([
     getUserProfile(authUser),
     listWorkoutsByUser(userId, { limit: WORKOUT_LIST_LIMIT }),
@@ -73,11 +84,21 @@ export async function buildUserAiContext(
     fetchSetRowsForAnalytics(userId, range90),
     fetchWorkoutDatesInRange(userId, range90),
     fetchExercisesUsedByUser(userId),
+    getDailyPlanForUser(userId, todayDateString()),
+    listWorkoutTemplatesForUser(userId),
+    listCustomExercisesForUser(userId),
   ]);
 
   const recentDetails = await loadRecentWorkoutDetails(
     userId,
     workoutList.map((w) => w.id),
+  );
+
+  const today = todayDateString();
+  const upcomingPlans = await listUpcomingDailyPlansForUser(
+    userId,
+    addDaysToDateString(today, 1),
+    addDaysToDateString(today, 7),
   );
 
   const analytics90 = buildWorkoutAnalytics(
@@ -127,6 +148,47 @@ export async function buildUserAiContext(
     sections.push(
       "## Exercises they have performed",
       exercisesUsed.map((e) => e.name).join(", "),
+    );
+  }
+
+  if (customExercises.length > 0) {
+    sections.push(
+      "## Custom exercise catalog",
+      customExercises.map((e) => `${e.name} (${e.muscleGroup})`).join(", "),
+    );
+  }
+
+  if (templates.length > 0) {
+    sections.push(
+      "## Saved workout templates",
+      templates
+        .slice(0, 12)
+        .map((t) => `- ${t.name} (${t.exerciseCount} exercises)`)
+        .join("\n"),
+    );
+  }
+
+  if (dailyPlan) {
+    const planLines = [
+      "## Today's workout plan",
+      `Date: ${dailyPlan.planDate}`,
+      `Title: ${dailyPlan.title}`,
+      `Status: ${dailyPlan.status}`,
+      dailyPlan.aiRationale ? `Rationale: ${dailyPlan.aiRationale}` : null,
+      dailyPlan.exercises.length
+        ? `Exercises: ${dailyPlan.exercises.map((e) => e.exerciseName).join(", ")}`
+        : "Exercises: none (rest or TBD)",
+    ].filter(Boolean) as string[];
+    sections.push(...planLines);
+  }
+
+  if (upcomingPlans.length > 0) {
+    sections.push(
+      "## Upcoming workout plans (saved)",
+      ...upcomingPlans.map(
+        (p) =>
+          `- ${p.planDate}: ${p.title} (${p.status}) — ${p.exercises.map((e) => e.exerciseName).join(", ") || "rest/TBD"}`,
+      ),
     );
   }
 
