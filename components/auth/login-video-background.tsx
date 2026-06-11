@@ -139,7 +139,6 @@ export function LoginVideoBackground() {
           playsInline
           autoPlay={slot === 0}
           preload="auto"
-          fetchPriority={slot === 0 ? "high" : "low"}
           onEnded={() => advance(slot)}
           onCanPlay={() => onSlotCanPlay(slot)}
           onPlaying={() => onSlotPlaying(slot)}
