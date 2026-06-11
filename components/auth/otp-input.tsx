@@ -8,6 +8,7 @@ type OtpInputProps = {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  className?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
 };
@@ -17,6 +18,7 @@ export function OtpInput({
   value,
   onChange,
   disabled,
+  className,
   ...aria
 }: OtpInputProps) {
   return (
@@ -37,6 +39,7 @@ export function OtpInput({
       className={cn(
         "text-center font-mono text-2xl tracking-[0.35em]",
         "placeholder:tracking-[0.35em] placeholder:text-muted-foreground/40",
+        className,
       )}
       {...aria}
     />

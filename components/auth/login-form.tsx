@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 
 type LoginFormProps = {
   next?: string;
+  /** Light text + glass-friendly styles for video login background */
+  overlay?: boolean;
 };
 
 type LoginStep = "email" | "otp";
@@ -59,7 +61,7 @@ function AppleIcon({ className }: { className?: string }) {
   );
 }
 
-export function LoginForm({ next }: LoginFormProps) {
+export function LoginForm({ next, overlay = false }: LoginFormProps) {
   const router = useRouter();
   const [step, setStep] = useState<LoginStep>("email");
   const [pendingEmail, setPendingEmail] = useState("");
@@ -209,6 +211,14 @@ export function LoginForm({ next }: LoginFormProps) {
   const actionButtonClass =
     "h-14 min-h-14 w-full gap-3 rounded-xl px-4 text-base font-semibold [&_svg]:size-6";
 
+  const labelClass = overlay ? "text-base font-medium text-white" : "text-base font-medium";
+  const mutedClass = overlay ? "text-white/70" : "text-muted-foreground";
+  const foregroundClass = overlay ? "text-white" : "text-foreground";
+  const dividerBg = overlay ? "bg-black/40" : "bg-background";
+  const oauthOutlineClass = overlay
+    ? "border-white/25 bg-white/10 text-white hover:bg-white/15 hover:text-white"
+    : undefined;
+
   const busy = loading !== null;
 
   return (
@@ -218,8 +228,12 @@ export function LoginForm({ next }: LoginFormProps) {
           role="alert"
           className={
             feedback.type === "success"
-              ? "rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-center text-base leading-snug text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300"
-              : "rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-center text-base leading-snug text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300"
+              ? overlay
+                ? "rounded-xl border border-emerald-400/40 bg-emerald-950/50 px-4 py-3.5 text-center text-base leading-snug text-emerald-100"
+                : "rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-center text-base leading-snug text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300"
+              : overlay
+                ? "rounded-xl border border-red-400/40 bg-red-950/50 px-4 py-3.5 text-center text-base leading-snug text-red-100"
+                : "rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-center text-base leading-snug text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300"
           }
         >
           {feedback.message}
@@ -229,7 +243,7 @@ export function LoginForm({ next }: LoginFormProps) {
       {step === "email" ? (
         <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-5">
           <div className="space-y-2.5">
-            <label htmlFor="email" className="text-base font-medium">
+            <label htmlFor="email" className={labelClass}>
               Email
             </label>
             <Input
@@ -241,6 +255,11 @@ export function LoginForm({ next }: LoginFormProps) {
               placeholder="you@example.com"
               aria-invalid={Boolean(emailForm.formState.errors.email)}
               disabled={busy}
+              className={
+                overlay
+                  ? "border-white/20 bg-white/10 text-white placeholder:text-white/45"
+                  : undefined
+              }
               {...emailForm.register("email")}
             />
             {emailForm.formState.errors.email && (
@@ -264,16 +283,20 @@ export function LoginForm({ next }: LoginFormProps) {
       ) : (
         <div className="space-y-5">
           <div className="space-y-1 text-center">
-            <p className="text-base font-medium">Enter verification code</p>
-            <p className="text-sm text-muted-foreground">
+            <p className={`text-base font-medium ${foregroundClass}`}>
+              Enter verification code
+            </p>
+            <p className={`text-sm ${mutedClass}`}>
               Sent to{" "}
-              <span className="font-medium text-foreground">{pendingEmail}</span>
+              <span className={`font-medium ${foregroundClass}`}>
+                {pendingEmail}
+              </span>
             </p>
             <button
               type="button"
               onClick={handleChangeEmail}
               disabled={busy}
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
+              className={`text-sm font-medium underline-offset-4 hover:underline disabled:opacity-50 ${overlay ? "text-white" : "text-primary"}`}
             >
               Use a different email
             </button>
@@ -292,6 +315,11 @@ export function LoginForm({ next }: LoginFormProps) {
                 }
                 disabled={busy}
                 aria-invalid={Boolean(otpForm.formState.errors.otp)}
+                className={
+                  overlay
+                    ? "border-white/20 bg-white/10 text-white placeholder:text-white/35"
+                    : undefined
+                }
               />
               {otpForm.formState.errors.otp && (
                 <p className="text-center text-base text-destructive">
@@ -316,13 +344,13 @@ export function LoginForm({ next }: LoginFormProps) {
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className={`text-center text-sm ${mutedClass}`}>
             Didn&apos;t get a code?{" "}
             <button
               type="button"
               onClick={handleResendCode}
               disabled={busy || resendCooldown > 0}
-              className="font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
+              className={`font-medium underline-offset-4 hover:underline disabled:opacity-50 ${overlay ? "text-white" : "text-primary"}`}
             >
               {resendCooldown > 0
                 ? `Resend in ${resendCooldown}s`
@@ -336,10 +364,12 @@ export function LoginForm({ next }: LoginFormProps) {
         <>
           <div className="relative py-1">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+              <span
+                className={`w-full border-t ${overlay ? "border-white/20" : "border-border"}`}
+              />
             </div>
             <div className="relative flex justify-center text-sm uppercase tracking-wide">
-              <span className="bg-background px-3 text-muted-foreground">or</span>
+              <span className={`${dividerBg} px-3 ${mutedClass}`}>or</span>
             </div>
           </div>
 
@@ -347,7 +377,7 @@ export function LoginForm({ next }: LoginFormProps) {
             <Button
               type="button"
               variant="outline"
-              className={actionButtonClass}
+              className={overlay ? `${actionButtonClass} ${oauthOutlineClass}` : actionButtonClass}
               disabled={busy}
               onClick={() => handleOAuth("google")}
             >
@@ -362,7 +392,7 @@ export function LoginForm({ next }: LoginFormProps) {
             <Button
               type="button"
               variant="outline"
-              className={actionButtonClass}
+              className={overlay ? `${actionButtonClass} ${oauthOutlineClass}` : actionButtonClass}
               disabled={busy}
               onClick={() => handleOAuth("apple")}
             >

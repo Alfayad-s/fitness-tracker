@@ -8,6 +8,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|manifest.webmanifest|sw.js|workbox-.*\\.js).*)",
+    /*
+     * Skip static assets (including login background videos in /videos).
+     * Without this, unauthenticated requests to .mp4 files redirect to /login.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|videos/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm|mov|ico)$|manifest.webmanifest|sw.js|workbox-.*\\.js).*)",
   ],
 };
