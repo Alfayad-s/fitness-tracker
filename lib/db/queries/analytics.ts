@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { and, countDistinct, desc, eq, gte, lte } from "drizzle-orm";
 
 import type { DateRange } from "@/lib/analytics/date-range";
 import { db } from "@/lib/db";
@@ -111,6 +111,22 @@ export async function fetchRecentWorkoutDatesForStreak(
       return [...new Set(rows.map((r) => r.date))];
     },
     [],
+  );
+}
+
+/** Distinct workout days logged — cheap alternative to loading every date row. */
+export async function fetchWorkoutSessionCount(userId: string): Promise<number> {
+  return withDbFallback(
+    "fetchWorkoutSessionCount",
+    async () => {
+      const [row] = await db
+        .select({ count: countDistinct(workouts.date) })
+        .from(workouts)
+        .where(eq(workouts.userId, userId));
+
+      return Number(row?.count ?? 0);
+    },
+    0,
   );
 }
 

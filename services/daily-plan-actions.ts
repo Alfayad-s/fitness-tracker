@@ -184,7 +184,8 @@ export async function fetchWeekSchedule(weekStartDate?: string): Promise<
   return { weekStart, days };
 }
 
-export async function ensureDailyWorkoutPlan(planDate?: string) {
+/** Fast path for dashboard — never calls AI (use ensureDailyWorkoutPlan to auto-generate). */
+export async function resolveDailyWorkoutPlanForDisplay(planDate?: string) {
   const auth = await requireUserId();
   if ("error" in auth) return { error: auth.error, plan: null };
 
@@ -221,9 +222,23 @@ export async function ensureDailyWorkoutPlan(planDate?: string) {
     }
   }
 
+  return { plan: existing };
+}
+
+export async function ensureDailyWorkoutPlan(planDate?: string) {
+  const auth = await requireUserId();
+  if ("error" in auth) return { error: auth.error, plan: null };
+
+  const date = planDate ?? todayDateString();
+  const resolved = await resolveDailyWorkoutPlanForDisplay(date);
+  if ("error" in resolved && resolved.error) return resolved;
+  if (resolved.plan && resolved.plan.status !== "skipped") {
+    return { plan: resolved.plan };
+  }
+
   // AI auto-suggest only for today; future dates are planned explicitly via chat.
   if (date !== todayDateString()) {
-    return { plan: existing };
+    return { plan: resolved.plan };
   }
 
   try {

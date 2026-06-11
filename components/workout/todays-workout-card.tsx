@@ -107,7 +107,7 @@ export function TodaysWorkoutCard({
     }
 
     const result = await acceptDailyWorkoutPlanAction(plan.planDate);
-    if ("error" in result && result.error) {
+    if ("error" in result && typeof result.error === "string") {
       setBusy(null);
       setError(result.error);
       return;
@@ -135,7 +135,7 @@ export function TodaysWorkoutCard({
     setError(null);
     const result = await skipDailyWorkoutPlanAction(plan.planDate);
     setBusy(null);
-    if ("error" in result && result.error) {
+    if ("error" in result && typeof result.error === "string") {
       setError(result.error);
       return;
     }
@@ -147,7 +147,7 @@ export function TodaysWorkoutCard({
     setError(null);
     const result = await regenerateDailyWorkoutPlanAction(plan.planDate);
     setBusy(null);
-    if ("error" in result && result.error) {
+    if ("error" in result && typeof result.error === "string") {
       setError(result.error);
       return;
     }

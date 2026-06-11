@@ -1,30 +1,32 @@
-import { Suspense } from "react";
-
 import { DailyNutritionTargets } from "@/components/dashboard/daily-nutrition-targets";
-import {
-  CompositionFocusTips,
-  CompositionFocusTipsSkeleton,
-} from "@/components/dashboard/composition-focus-tips";
-import { listBodyMeasurementsByUser } from "@/lib/db/queries/body-measurements";
+import { CompositionFocusTips } from "@/components/dashboard/composition-focus-tips";
+import type { UserProfile } from "@/lib/profile/get-user-profile";
+import type { BodyMeasurement } from "@/types";
 import type { User } from "@supabase/supabase-js";
 
 type BodyCompositionSectionProps = {
   user: User;
+  profile: UserProfile;
+  latestMeasurement: BodyMeasurement | null;
 };
 
 export async function BodyCompositionSection({
   user,
+  profile,
+  latestMeasurement,
 }: BodyCompositionSectionProps) {
-  const { measurements } = await listBodyMeasurementsByUser(user.id, 24);
-  const latest = measurements[0] ?? null;
-
   return (
     <div className="flex flex-col gap-3">
-      <DailyNutritionTargets user={user} latestMeasurement={latest} />
+      <DailyNutritionTargets
+        user={user}
+        profile={profile}
+        latestMeasurement={latestMeasurement}
+      />
 
-      <Suspense fallback={<CompositionFocusTipsSkeleton />}>
-        <CompositionFocusTips user={user} />
-      </Suspense>
+      <CompositionFocusTips
+        goalType={profile.goalType}
+        latestMeasurement={latestMeasurement}
+      />
     </div>
   );
 }

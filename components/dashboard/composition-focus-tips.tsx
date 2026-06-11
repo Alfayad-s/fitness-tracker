@@ -1,24 +1,31 @@
 import { Lightbulb, ScanLine, Target } from "lucide-react";
 
+import { staticCompositionFocusTips } from "@/lib/ai/generate-composition-focus-tips";
 import {
-  generateCompositionFocusTips,
-  staticCompositionFocusTips,
-} from "@/lib/ai/generate-composition-focus-tips";
-import type { User } from "@supabase/supabase-js";
+  computeCompositionScore,
+  scoreLabel,
+} from "@/lib/measurements/composition-score";
+import type { BodyMeasurement, GoalType } from "@/types";
 
 type CompositionFocusTipsProps = {
-  user: User;
+  goalType: GoalType | null;
+  latestMeasurement: BodyMeasurement | null;
 };
 
-export async function CompositionFocusTips({
-  user,
+export function CompositionFocusTips({
+  goalType,
+  latestMeasurement,
 }: CompositionFocusTipsProps) {
-  let tips = staticCompositionFocusTips();
+  const tips = staticCompositionFocusTips();
 
-  try {
-    tips = await generateCompositionFocusTips(user);
-  } catch {
-    // static fallback already set
+  if (latestMeasurement) {
+    const score = computeCompositionScore(latestMeasurement);
+    if (score != null) {
+      tips.focusNext[0] = `Your latest composition score is ${score} (${scoreLabel(score)}) — ${tips.focusNext[0]}`;
+    }
+  } else if (!goalType) {
+    tips.focusNext[1] =
+      "Set your fitness goal in Profile so tips match lose fat, muscle gain, or strength.";
   }
 
   return (
@@ -28,7 +35,7 @@ export async function CompositionFocusTips({
           <Lightbulb className="size-4 text-primary" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold">AI coach tips</h3>
+          <h3 className="text-sm font-semibold">Coach tips</h3>
           <p className="text-xs text-muted-foreground">
             Based on your latest body composition data
           </p>
@@ -48,43 +55,27 @@ export async function CompositionFocusTips({
                 className="flex gap-2 text-sm leading-snug text-foreground"
               >
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                <span>{item}</span>
+                {item}
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-          <div className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div>
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             <ScanLine className="size-3.5" />
-            Your next scan
+            Next scan
           </div>
-          <p className="text-sm leading-relaxed text-foreground">
+          <p className="text-sm leading-relaxed text-muted-foreground">
             {tips.nextScanAdvice}
           </p>
         </div>
 
-        <div className="border-t border-border pt-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            BMI & composition
-          </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-foreground">
+        <div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
             {tips.bmiNote}
           </p>
         </div>
-      </div>
-    </section>
-  );
-}
-
-export function CompositionFocusTipsSkeleton() {
-  return (
-    <section className="rounded-xl bg-card p-4">
-      <div className="h-5 w-32 animate-pulse rounded bg-muted" />
-      <div className="mt-4 space-y-3">
-        <div className="h-16 animate-pulse rounded-lg bg-muted" />
-        <div className="h-20 animate-pulse rounded-lg bg-muted" />
-        <div className="h-12 animate-pulse rounded-lg bg-muted" />
       </div>
     </section>
   );

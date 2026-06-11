@@ -7,20 +7,23 @@ import {
   WATER_BOTTLE_ML,
 } from "@/lib/measurements/daily-nutrition-targets";
 import { getUserProfile } from "@/lib/profile/get-user-profile";
+import type { UserProfile } from "@/lib/profile/get-user-profile";
 import { cn } from "@/lib/utils";
 import type { BodyMeasurement } from "@/types";
 import type { User } from "@supabase/supabase-js";
 
 type DailyNutritionTargetsProps = {
   user: User;
+  profile?: UserProfile;
   latestMeasurement: BodyMeasurement | null;
 };
 
 export async function DailyNutritionTargets({
   user,
+  profile: profileProp,
   latestMeasurement,
 }: DailyNutritionTargetsProps) {
-  const profile = await getUserProfile(user);
+  const profile = profileProp ?? (await getUserProfile(user));
   const targets = calculateDailyNutritionTargets({
     profile,
     measurement: latestMeasurement,

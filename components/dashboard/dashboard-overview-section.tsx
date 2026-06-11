@@ -1,16 +1,14 @@
+import { Suspense } from "react";
+
 import { StatSummary } from "@/components/analytics/stat-summary";
 import { DbUnavailableAlert } from "@/components/db/db-unavailable-alert";
 import { BodyCompositionSection } from "@/components/dashboard/body-composition-section";
 import { BodyCompositionVisual } from "@/components/dashboard/body-composition-visual";
+import { DashboardPlansSection } from "@/components/dashboard/dashboard-plans-section";
 import { SlideToStartWorkout } from "@/components/dashboard/slide-to-start-workout";
-import { TodaysWorkoutCard } from "@/components/workout/todays-workout-card";
-import { UpcomingWorkoutPlansCard } from "@/components/dashboard/upcoming-workout-plans-card";
-import {
-  ensureDailyWorkoutPlan,
-  fetchUpcomingWorkoutPlans,
-} from "@/services/daily-plan-actions";
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions";
 import { GoalProgressCard } from "@/components/dashboard/goal-progress-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { loadDashboardOverview } from "@/lib/dashboard/get-dashboard-data";
 import { buildBodyCompositionBodyData } from "@/lib/measurements/body-composition-body-map";
 import { computeCompositionScore } from "@/lib/measurements/composition-score";
@@ -20,18 +18,24 @@ type DashboardOverviewSectionProps = {
   user: User;
 };
 
+function DashboardPlansSkeleton() {
+  return (
+    <>
+      <Skeleton className="h-28 rounded-xl" />
+      <Skeleton className="h-36 rounded-xl" />
+    </>
+  );
+}
+
 export async function DashboardOverviewSection({
   user,
 }: DashboardOverviewSectionProps) {
-  const { summary, latestMeasurement, heightCm, dbUnavailable } =
+  const { profile, summary, latestMeasurement, dbUnavailable } =
     await loadDashboardOverview(user);
-  const [{ plan: dailyPlan }, schedule] = await Promise.all([
-    ensureDailyWorkoutPlan(),
-    fetchUpcomingWorkoutPlans(7),
-  ]);
+
   const bodyVisualization = buildBodyCompositionBodyData(
     latestMeasurement,
-    heightCm,
+    profile.heightCm,
   );
   const compositionScore = latestMeasurement
     ? computeCompositionScore(latestMeasurement)
@@ -56,15 +60,19 @@ export async function DashboardOverviewSection({
         recordedAtLabel={bodyVisualization.recordedAtLabel}
       />
 
-      <TodaysWorkoutCard plan={dailyPlan} compact />
-
-      <UpcomingWorkoutPlansCard plans={[...schedule.upcomingPlans]} />
+      <Suspense fallback={<DashboardPlansSkeleton />}>
+        <DashboardPlansSection />
+      </Suspense>
 
       <SlideToStartWorkout />
 
       <StatSummary items={summary.stats} />
 
-      <BodyCompositionSection user={user} />
+      <BodyCompositionSection
+        user={user}
+        profile={profile}
+        latestMeasurement={latestMeasurement}
+      />
 
       <DashboardQuickActions actions={summary.quickActions} />
 

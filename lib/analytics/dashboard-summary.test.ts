@@ -37,7 +37,9 @@ describe("dashboard-summary", () => {
       username: "alex_lifts",
       goalType: "strength",
       recentWorkouts: [],
-      allWorkoutDates: [],
+      streakWorkoutDates: [],
+      weeklyWorkoutDates: [],
+      totalWorkoutCount: 0,
       latestMeasurement: null,
     });
 

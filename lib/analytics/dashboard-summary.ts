@@ -123,7 +123,11 @@ export type BuildDashboardSummaryInput = {
   username: string | null;
   goalType: GoalType | null;
   recentWorkouts: WorkoutListItem[];
-  allWorkoutDates: string[];
+  /** Recent distinct dates for streak stats and calendar periods. */
+  streakWorkoutDates: string[];
+  /** Dates within the dashboard chart window (last N weeks). */
+  weeklyWorkoutDates: string[];
+  totalWorkoutCount: number;
   latestMeasurement: BodyMeasurement | null;
 };
 
@@ -135,14 +139,16 @@ export function buildDashboardSummary(
     username,
     goalType,
     recentWorkouts,
-    allWorkoutDates,
+    streakWorkoutDates,
+    weeklyWorkoutDates,
+    totalWorkoutCount,
     latestMeasurement,
   } = input;
 
   const lastWorkout = recentWorkouts[0] ?? null;
-  const uniqueWorkoutDates = [...new Set(allWorkoutDates)];
-  const streak = computeStreaks(uniqueWorkoutDates);
-  const workoutsThisWeek = countWorkoutsThisWeek(allWorkoutDates);
+  const uniqueStreakDates = [...new Set(streakWorkoutDates)];
+  const streak = computeStreaks(uniqueStreakDates);
+  const workoutsThisWeek = countWorkoutsThisWeek(weeklyWorkoutDates);
   const latestBodyWeightKg =
     latestMeasurement?.weightKg != null
       ? Number(latestMeasurement.weightKg)
@@ -157,8 +163,8 @@ export function buildDashboardSummary(
     greeting: buildGreeting(fullName, username),
     currentStreak: streak.current,
     longestStreak: streak.longest,
-    totalWorkouts: uniqueWorkoutDates.length,
-    streakPeriods: buildStreakPeriods(uniqueWorkoutDates),
+    totalWorkouts: totalWorkoutCount,
+    streakPeriods: buildStreakPeriods(uniqueStreakDates),
     stats: [
       { label: "Last workout", value: formatLastWorkoutStat(lastWorkout) },
       {
@@ -179,7 +185,7 @@ export function buildDashboardSummary(
     ],
     lastWorkout,
     recentWorkouts: recentWorkouts.slice(0, 5),
-    weeklyFrequency: buildWeeklyFrequencyLastNWeeks(allWorkoutDates, 4),
+    weeklyFrequency: buildWeeklyFrequencyLastNWeeks(weeklyWorkoutDates, 4),
     quickActions: DASHBOARD_QUICK_ACTIONS,
     goal: goalType && goalTypeLabel ? { type: goalType, label: goalTypeLabel } : null,
     latestBodyWeightKg,
