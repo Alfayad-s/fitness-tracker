@@ -83,7 +83,11 @@
 
 .menu__item.active {
   color: var(--component-active-color);
-  background: var(--component-active-bg);
+  background: color-mix(
+    in srgb,
+    var(--component-active-color) 14%,
+    var(--component-active-bg)
+  );
 }
 
 .menu__icon {

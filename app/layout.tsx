@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Manrope } from "next/font/google";
 import Script from "next/script";
 
 import { Providers } from "@/app/providers";
@@ -9,9 +9,10 @@ import { THEME_INIT_SCRIPT } from "@/lib/theme/theme-init-script";
 
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -81,7 +82,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} light h-full antialiased`}
+      className={`${manrope.variable} ${geistMono.variable} light h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground font-sans">
         <Script id="theme-init" strategy="beforeInteractive">

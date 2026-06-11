@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   const user = await requirePageUser("/dashboard");
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-6 md:max-w-3xl">
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 pb-6 pt-0 md:max-w-3xl md:py-6">
       <Suspense fallback={<DashboardOverviewSkeleton />}>
         <DashboardOverviewSection user={user} />
       </Suspense>

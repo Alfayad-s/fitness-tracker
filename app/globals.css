@@ -51,7 +51,7 @@
 }
 
 body {
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }
@@ -59,6 +59,21 @@ body {
 @supports (height: 100dvh) {
   body {
     min-height: 100dvh;
+  }
+}
+
+/* Mobile app shell — reserve space under fixed header (JS refines with measured height) */
+@media (max-width: 767px) {
+  .app-shell-content {
+    padding-top: calc(
+      env(safe-area-inset-top, 0px) + 4.75rem + 1px + 0.75rem
+    );
+  }
+
+  .app-shell-content[data-home-route="true"] {
+    padding-top: calc(
+      env(safe-area-inset-top, 0px) + 4.75rem + 1px + 0.75rem + 3rem + 0.25rem
+    );
   }
 }
 

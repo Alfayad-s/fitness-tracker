@@ -6,12 +6,15 @@ import React, { useEffect, useMemo, useState } from "react";
 export type NavIconComponent = React.ComponentType<{
   className?: string;
   active?: boolean;
+  accentColor?: string;
 }>;
 
 export interface InteractiveMenuItem {
   label: string;
   icon: NavIconComponent;
   href?: string;
+  /** Active tab icon and label color */
+  accentColor?: string;
 }
 
 export interface InteractiveMenuProps {
@@ -92,10 +95,20 @@ function InteractiveMenu({
         const IconComponent = item.icon;
 
         const itemClassName = `menu__item ${isActive ? "active" : ""}`;
+        const itemStyle =
+          isActive && item.accentColor
+            ? ({
+                "--component-active-color": item.accentColor,
+              } as React.CSSProperties)
+            : undefined;
         const itemContent = (
           <>
             <div className="menu__icon" aria-hidden="true">
-              <IconComponent className="icon" active={isActive} />
+              <IconComponent
+                className="icon"
+                active={isActive}
+                accentColor={item.accentColor}
+              />
             </div>
             <strong className={`menu__text ${isActive ? "active" : ""}`}>
               {item.label}
@@ -110,6 +123,7 @@ function InteractiveMenu({
               href={item.href}
               prefetch
               className={itemClassName}
+              style={itemStyle}
               aria-current={isActive ? "page" : undefined}
               onClick={() => handleItemClick(index, item)}
             >
@@ -123,6 +137,7 @@ function InteractiveMenu({
             key={item.label}
             type="button"
             className={itemClassName}
+            style={itemStyle}
             onClick={() => handleItemClick(index, item)}
             aria-current={isActive ? "page" : undefined}
           >

@@ -11,6 +11,7 @@ type NavMenuIconProps = {
   fillSrc: string;
   className?: string;
   active?: boolean;
+  accentColor?: string;
 };
 
 export function NavMenuIcon({
@@ -18,10 +19,44 @@ export function NavMenuIcon({
   fillSrc,
   className,
   active = false,
+  accentColor,
 }: NavMenuIconProps) {
+  if (active) {
+    if (accentColor) {
+      return (
+        <span
+          className={cn("icon pointer-events-none block size-6", className)}
+          style={{
+            backgroundColor: accentColor,
+            WebkitMaskImage: `url(${fillSrc})`,
+            maskImage: `url(${fillSrc})`,
+            WebkitMaskSize: "contain",
+            maskSize: "contain",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            WebkitMaskPosition: "center",
+            maskPosition: "center",
+          }}
+          aria-hidden
+        />
+      );
+    }
+
+    return (
+      <Image
+        src={fillSrc}
+        alt=""
+        width={24}
+        height={24}
+        className={cn("icon pointer-events-none", className)}
+        aria-hidden
+      />
+    );
+  }
+
   return (
     <Image
-      src={active ? fillSrc : lineSrc}
+      src={lineSrc}
       alt=""
       width={24}
       height={24}
@@ -35,13 +70,22 @@ export function createNavMenuIcon(
   lineSrc: string,
   fillSrc: string,
 ): NavIconComponent {
-  function Icon({ className, active }: { className?: string; active?: boolean }) {
+  function Icon({
+    className,
+    active,
+    accentColor,
+  }: {
+    className?: string;
+    active?: boolean;
+    accentColor?: string;
+  }) {
     return (
       <NavMenuIcon
         lineSrc={lineSrc}
         fillSrc={fillSrc}
         className={className}
         active={active}
+        accentColor={accentColor}
       />
     );
   }

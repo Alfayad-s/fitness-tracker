@@ -18,9 +18,11 @@ import {
   useStreakLayoutPin,
 } from "@/components/layout/streak-layout-context";
 import {
+  useIsMobileViewport,
+  useMobileTopChromeOffset,
+} from "@/hooks/use-mobile-top-chrome-offset";
+import {
   isHomeRoute,
-  mobileHeaderContentPaddingTop,
-  mobileHeaderOnlyPaddingTop,
   mobileStreakPinContentPaddingTop,
 } from "@/lib/layout/mobile-header-metrics";
 import { cn } from "@/lib/utils";
@@ -73,19 +75,23 @@ export function AppShell({ children }: AppShellProps) {
 function AppShellInner({ children }: AppShellProps) {
   const pathname = usePathname();
   const chromeVisible = useScrollChromeVisible();
+  const isMobile = useIsMobileViewport();
   const { showStreakPin: hasStreakPin } = useStreakLayoutPin();
   const { header, content } = splitAppShellChildren(children);
-  const showStreakPin = isHomeRoute(pathname) && hasStreakPin;
+  const onHome = isHomeRoute(pathname);
+  const mobilePaddingTop = useMobileTopChromeOffset({
+    enabled: Boolean(header),
+    assumeStreakOnHome: onHome,
+  });
 
-  const mobilePaddingTop = !header
-    ? undefined
-    : chromeVisible
-      ? showStreakPin
-        ? "max-md:pt-[var(--app-header-with-streak-offset)]"
-        : "max-md:pt-[var(--app-header-only-offset)]"
-      : showStreakPin
-        ? "max-md:pt-[var(--app-streak-only-offset)]"
-        : "max-md:pt-[env(safe-area-inset-top,0px)]";
+  const resolvedMobilePaddingTop =
+    header && isMobile
+      ? chromeVisible
+        ? mobilePaddingTop
+        : onHome && hasStreakPin
+          ? mobileStreakPinContentPaddingTop
+          : "env(safe-area-inset-top, 0px)"
+      : undefined;
 
   return (
     <div className="flex min-h-[100dvh] flex-1">
@@ -95,19 +101,19 @@ function AppShellInner({ children }: AppShellProps) {
         {header ? <div className="md:hidden">{header}</div> : null}
 
         <div
+          data-app-shell-content
+          data-home-route={onHome ? "true" : undefined}
+          data-streak-pin={onHome && hasStreakPin ? "true" : undefined}
           className={cn(
-            "flex min-h-0 flex-1 flex-col transition-[padding] duration-150 ease-out",
-            mobilePaddingTop,
+            "app-shell-content flex min-h-0 flex-1 flex-col transition-[padding] duration-150 ease-out",
             header ? "max-md:pb-[var(--app-nav-offset)]" : "pb-0 pt-0",
             !header && "max-md:pb-[var(--app-nav-offset)]",
             "md:py-0 md:pb-0",
           )}
           style={
             {
-              "--app-header-with-streak-offset": mobileHeaderContentPaddingTop,
-              "--app-header-only-offset": mobileHeaderOnlyPaddingTop,
-              "--app-streak-only-offset": mobileStreakPinContentPaddingTop,
               "--app-nav-offset": NAV_OFFSET,
+              paddingTop: resolvedMobilePaddingTop,
             } as React.CSSProperties
           }
         >

@@ -7,6 +7,7 @@ import { BodyCompositionVisual } from "@/components/dashboard/body-composition-v
 import { DashboardPlansSection } from "@/components/dashboard/dashboard-plans-section";
 import { SlideToStartWorkout } from "@/components/dashboard/slide-to-start-workout";
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions";
+import { DashboardWelcomeHeader } from "@/components/dashboard/dashboard-welcome-header";
 import { GoalProgressCard } from "@/components/dashboard/goal-progress-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadDashboardOverview } from "@/lib/dashboard/get-dashboard-data";
@@ -44,14 +45,10 @@ export async function DashboardOverviewSection({
   return (
     <div className="flex flex-col gap-6">
       {dbUnavailable ? <DbUnavailableAlert /> : null}
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {summary.greeting}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here&apos;s how your training is going.
-        </p>
-      </header>
+      <DashboardWelcomeHeader
+        fullName={profile.fullName}
+        username={profile.username}
+      />
 
       <BodyCompositionVisual
         data={bodyVisualization}

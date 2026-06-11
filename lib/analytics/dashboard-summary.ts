@@ -23,19 +23,30 @@ function formatRecordedDate(d: Date | string): string {
   return formatDate(date);
 }
 
+export function getGreetingPeriod(now = new Date()): string {
+  const hour = now.getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+export function getGreetingDisplayName(
+  fullName: string | null,
+  username: string | null,
+): string {
+  return (
+    fullName?.trim() ||
+    (username?.trim() ? username.trim() : null) ||
+    "there"
+  );
+}
+
 export function buildGreeting(
   fullName: string | null,
   username: string | null,
   now = new Date(),
 ): string {
-  const hour = now.getHours();
-  const period =
-    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const who =
-    fullName?.trim() ||
-    (username?.trim() ? username.trim() : null) ||
-    "there";
-  return `${period}, ${who}`;
+  return `${getGreetingPeriod(now)}, ${getGreetingDisplayName(fullName, username)}`;
 }
 
 export function lastNWeekKeys(n: number, anchor = new Date()): string[] {

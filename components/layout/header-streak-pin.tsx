@@ -29,6 +29,7 @@ export function HeaderStreakPin({ currentStreak }: HeaderStreakPinProps) {
   return (
     <Link
       href="/dashboard"
+      data-header-streak-pin
       className={cn(
         "fixed left-1/2 z-50 -translate-x-1/2 md:hidden",
         "inline-flex h-[var(--streak-capsule-height)] min-h-[var(--streak-capsule-height)] items-center rounded-full border border-border bg-card px-3.5 py-1.5 shadow-sm",

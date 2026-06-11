@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
+import { usePathname } from "next/navigation";
+
+import { isHomeRoute } from "@/lib/layout/mobile-header-metrics";
 
 import { AppHeaderBar } from "@/components/layout/app-header-bar";
 import { HeaderStreakPin } from "@/components/layout/header-streak-pin";
@@ -21,17 +24,20 @@ export function AppMobileChrome({
   email,
   currentStreak,
 }: AppMobileChromeProps) {
+  const pathname = usePathname();
   const chromeVisible = useScrollChromeVisible();
   const { setShowStreakPin } = useStreakLayoutPin();
+  const showStreakPin = isHomeRoute(pathname) && currentStreak >= 1;
 
-  useEffect(() => {
-    setShowStreakPin(currentStreak >= 1);
+  useLayoutEffect(() => {
+    setShowStreakPin(showStreakPin);
     return () => setShowStreakPin(false);
-  }, [currentStreak, setShowStreakPin]);
+  }, [showStreakPin, setShowStreakPin]);
 
   return (
     <>
       <div
+        data-app-header-chrome
         className={cn(
           "fixed inset-x-0 top-0 z-40 overflow-visible transition-transform duration-150 ease-out",
           chromeVisible

@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function AppHeaderSkeleton() {
   return (
     <div
+      data-app-header-chrome
       className="fixed inset-x-0 top-0 z-40 border-b border-border/60 bg-background/90 backdrop-blur-md md:hidden"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
       aria-hidden
